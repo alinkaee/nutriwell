@@ -1,0 +1,28 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Дневник — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-journal-text me-2"></i>Дневник питания</h2>
+
+<div class="row mt-4">
+  {% for entry in diary_entries %}
+    <div class="col-md-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5>{{ entry.date }} {{ entry.time|default:"" }}</h5>
+          <p>{{ entry.food_description|linebreaksbr }}</p>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <p class="text-muted">Нет записей в дневнике.</p>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="mt-4 text-end">
+  <a href="{% url 'diaries:add_diary_entry' %}" class="btn btn-primary">+ Новая запись</a>
+</div>
+{% endblock %}

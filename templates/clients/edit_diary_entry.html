@@ -1,0 +1,133 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Редактировать запись — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-pencil me-2"></i>Редактировать запись</h2>
+
+<div class="card mt-4">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        {{ form.date.label_tag }}
+        {{ form.date }}
+      </div>
+
+      <div class="mb-3">
+        {{ form.time.label_tag }}
+        {{ form.time }}
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check">
+          {{ form.manual_input }}
+          <label class="form-check-label" for="{{ form.manual_input.id_for_label }}">
+            {{ form.manual_input.label }}
+          </label>
+        </div>
+        <small class="text-muted">Если вы не нашли продукт в списке — включите эту опцию.</small>
+      </div>
+
+      <div class="mb-3" id="product-field">
+        {{ form.product.label_tag }}
+        {{ form.product }}
+      </div>
+
+      <div class="mb-3" id="description-field">
+        {{ form.food_description.label_tag }}
+        {{ form.food_description }}
+      </div>
+
+      <hr>
+
+      <h5>Питательная ценность (если известна)</h5>
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          {{ form.calories.label_tag }}
+          {{ form.calories }}
+        </div>
+        <div class="col-md-3 mb-3">
+          {{ form.protein.label_tag }}
+          {{ form.protein }}
+        </div>
+        <div class="col-md-3 mb-3">
+          {{ form.fat.label_tag }}
+          {{ form.fat }}
+        </div>
+        <div class="col-md-3 mb-3">
+          {{ form.carbs.label_tag }}
+          {{ form.carbs }}
+        </div>
+      </div>
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'diaries:view_diary' %}" class="btn btn-secondary">Отмена</a>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const manualInput = document.getElementById('{{ form.manual_input.id_for_label }}');
+  const productSelect = document.getElementById('{{ form.product.id_for_label }}');
+  const descriptionField = document.getElementById('description-field');
+
+  const caloriesInput = document.querySelector('[name="calories"]');
+  const proteinInput = document.querySelector('[name="protein"]');
+  const fatInput = document.querySelector('[name="fat"]');
+  const carbsInput = document.querySelector('[name="carbs"]');
+
+  // Переключение между продуктом и ручным вводом
+  function toggleFields() {
+    if (manualInput.checked) {
+      productSelect.disabled = true;
+      descriptionField.style.display = 'block';
+      // Очистка полей
+      caloriesInput.value = '';
+      proteinInput.value = '';
+      fatInput.value = '';
+      carbsInput.value = '';
+    } else {
+      productSelect.disabled = false;
+      descriptionField.style.display = 'none';
+    }
+  }
+
+  manualInput.addEventListener('change', toggleFields);
+  toggleFields(); // Инициализация
+
+  // Автозаполнение при выборе продукта
+  productSelect.addEventListener('change', function() {
+    const productId = this.value;
+    if (!productId) {
+      caloriesInput.value = '';
+      proteinInput.value = '';
+      fatInput.value = '';
+      carbsInput.value = '';
+      return;
+    }
+
+    fetch(`/products/api/product/${productId}/nutrition/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('Ошибка загрузки данных о продукте');
+          return;
+        }
+        caloriesInput.value = data.calories || '';
+        proteinInput.value = data.protein || '';
+        fatInput.value = data.fat || '';
+        carbsInput.value = data.carbs || '';
+      })
+      .catch(err => {
+        console.error('Ошибка:', err);
+        alert('Не удалось загрузить данные о продукте');
+      });
+  });
+});
+</script>
+
+{% endblock %}

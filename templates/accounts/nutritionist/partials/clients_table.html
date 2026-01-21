@@ -1,0 +1,119 @@
+{% load url_utils %}
+
+<div id="clients-table" class="card mb-5">
+  <div class="card-header">
+    Мои клиенты ({{ filtered_clients.paginator.count }})
+  </div>
+  <div class="card-body">
+    {% if filtered_clients %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>
+                <a href="?{% url_replace request 'sort' 'user__first_name' %}&page=1"
+                   hx-boost="true" hx-target="#clients-table" hx-push-url="true">
+                  Имя
+                </a>
+                {% if sort_by == 'user__first_name' %}↑
+                {% elif sort_by == '-user__first_name' %}↓{% endif %}
+              </th>
+              <th>Email</th>
+              <th>
+                <a href="?{% url_replace request 'sort' 'nutritionprogram__start_date' %}&page=1"
+                   hx-boost="true" hx-target="#clients-table" hx-push-url="true">
+                  Начало программы
+                </a>
+                {% if sort_by == 'nutritionprogram__start_date' %}↑
+                {% elif sort_by == '-nutritionprogram__start_date' %}↓{% endif %}
+              </th>
+              <th>Цель</th>
+              <th>Последний вес</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for client in filtered_clients %}
+              <tr>
+                <td>{{ client.user.get_full_name|default:client.user.email }}</td>
+                <td>{{ client.user.email }}</td>
+                <td>
+                  {% if client.nutritionprogram_set.first %}
+                    {{ client.nutritionprogram_set.first.start_date|date:"d.m.Y" }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>{{ client.goal|truncatewords:5 }}</td>
+                <td>
+                  {% if client.latest_weight %}
+                    {{ client.latest_weight }} кг
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  {% if client.nutritionprogram_set.first %}
+                    <span class="badge bg-{% if client.nutritionprogram_set.first.status == 'active' %}success{% else %}secondary{% endif %}">
+                      {{ client.nutritionprogram_set.first.get_status_display }}
+                    </span>
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Пагинация -->
+      {% if filtered_clients.has_other_pages %}
+        <nav aria-label="Пагинация клиентов">
+          <ul class="pagination justify-content-center mt-3">
+            {% if filtered_clients.has_previous %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{% url_replace request 'page' filtered_clients.previous_page_number %}"
+                   hx-boost="true" hx-target="#clients-table" hx-push-url="true">
+                  &laquo;
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+
+            {% for num in filtered_clients.paginator.page_range %}
+              {% if filtered_clients.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?{% url_replace request 'page' num %}"
+                     hx-boost="true" hx-target="#clients-table" hx-push-url="true">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if filtered_clients.has_next %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?{% url_replace request 'page' filtered_clients.next_page_number %}"
+                   hx-boost="true" hx-target="#clients-table" hx-push-url="true">
+                  &raquo;
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
+    {% else %}
+      <p class="text-muted">Нет клиентов.</p>
+    {% endif %}
+  </div>
+</div>

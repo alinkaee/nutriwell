@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+  <meta name="theme-color" content="#6a9c89">
+  <title>Вход — Чистый Баланс</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    :root {
+      --primary: #6a9c89;
+      --primary-dark: #5a8f7b;
+      --accent: #d18e75;
+      --accent-light: #e0a790;
+      --bg-light: #fdfaf5;
+      --bg-gradient: linear-gradient(135deg, #fdfaf5 0%, #f0f6f3 100%);
+      --card-bg: rgba(255, 255, 255, 0.97);
+      --text-dark: #2d3748;
+      --text-medium: #4a5568;
+      --text-light: #6b7280;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+      --shadow-xl: 0 12px 40px rgba(106, 156, 137, 0.2);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Основной контейнер */
+    .auth-container {
+      display: flex;
+      width: 100%;
+      max-width: 1000px;
+      min-height: 600px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+      background: white;
+      transition: var(--transition);
+    }
+
+    /* Визуальная сторона */
+    .visual-side {
+      flex: 1;
+      background: linear-gradient(135deg, var(--accent), #c77a60);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .visual-side::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      right: -50%;
+      bottom: -50%;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      z-index: -1;
+      animation: pulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.1); opacity: 0.6; }
+    }
+
+    .visual-content {
+      z-index: 2;
+      max-width: 400px;
+      position: relative;
+    }
+
+    .visual-content h2 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .visual-content p {
+      opacity: 0.95;
+      line-height: 1.6;
+      font-size: 1.05rem;
+    }
+
+    /* Сторона формы */
+    .form-side {
+      flex: 1;
+      background: var(--card-bg);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .form-side h1 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    .form-side .subtitle {
+      text-align: center;
+      color: var(--text-medium);
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* Поля формы */
+    .form-control {
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 0.875rem 1rem;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      transition: var(--transition);
+      background: white;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(106, 156, 137, 0.15);
+      outline: none;
+    }
+
+    .form-control::placeholder {
+      color: #a0aec0;
+    }
+
+    /* Обертка для пароля */
+    .password-wrapper {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .password-wrapper .form-control {
+      padding-right: 3rem;
+      width: 100%;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+    }
+
+    .toggle-password:hover {
+      color: var(--primary);
+      background: rgba(106, 156, 137, 0.1);
+    }
+
+    .toggle-password:focus {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Кнопка входа */
+    .btn-login {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border: none;
+      padding: 1rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      color: white;
+      font-size: 1.05rem;
+      width: 100%;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      min-height: 52px;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.7s ease;
+      z-index: -1;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-login:hover::before {
+      left: 100%;
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    /* Ссылка забыли пароль */
+    .forgot-password {
+      text-align: center;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .forgot-password a {
+      color: var(--text-medium);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .forgot-password a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* Футер формы */
+    .form-footer {
+      text-align: center;
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      padding-top: 1.5rem;
+      border-top: 1px solid #edf0f2;
+    }
+
+    .form-footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .form-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Сообщения об ошибках */
+    .text-danger {
+      color: #e53e3e !important;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: block;
+    }
+
+    /* Адаптивность */
+
+    /* Большие планшеты (992px - 1199px) */
+    @media (max-width: 1199px) {
+      .auth-container {
+        max-width: 900px;
+      }
+
+      .visual-content h2 {
+        font-size: 1.8rem;
+      }
+
+      .visual-content p {
+        font-size: 1rem;
+      }
+
+      .form-side h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* Планшеты (768px - 991px) */
+    @media (max-width: 991px) {
+      .auth-container {
+        max-width: 700px;
+        min-height: 500px;
+      }
+
+      .visual-side {
+        padding: 2rem;
+      }
+
+      .form-side {
+        padding: 2rem 1.5rem;
+      }
+
+      .visual-content h2 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+      }
+
+      .visual-content p {
+        font-size: 0.95rem;
+      }
+
+      .form-side h1 {
+        font-size: 1.8rem;
+      }
+
+      .form-control {
+        padding: 0.75rem;
+      }
+
+      .btn-login {
+        padding: 0.875rem;
+        font-size: 1rem;
+      }
+    }
+
+    /* Мобильные устройства (576px - 767px) */
+    @media (max-width: 767px) {
+      html {
+        font-size: 15px;
+      }
+
+      body {
+        padding: 0.75rem;
+        align-items: flex-start;
+        min-height: 100vh;
+        height: auto;
+      }
+
+      .auth-container {
+        flex-direction: column;
+        height: auto;
+        min-height: auto;
+        max-width: 100%;
+        margin: 0;
+        border-radius: var(--radius-lg);
+      }
+
+      .visual-side {
+        padding: 2.5rem 1.5rem;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        min-height: 200px;
+        justify-content: center;
+      }
+
+      .form-side {
+        padding: 2.5rem 1.5rem;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        min-height: 400px;
+      }
+
+      .visual-content {
+        max-width: 100%;
+      }
+
+      .visual-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .visual-content p {
+        font-size: 0.9rem;
+      }
+
+      .form-side h1 {
+        font-size: 1.7rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .form-side .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+      }
+
+      .form-control {
+        padding: 0.875rem 0.75rem;
+        font-size: 0.95rem;
+      }
+
+      .btn-login {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+        min-height: 48px;
+      }
+
+      .toggle-password {
+        right: 8px;
+      }
+    }
+
+    /* Маленькие мобильные устройства (до 575px) */
+    @media (max-width: 575px) {
+      html {
+        font-size: 14px;
+      }
+
+      body {
+        padding: 0.5rem;
+      }
+
+      .visual-side {
+        padding: 2rem 1rem;
+        min-height: 180px;
+      }
+
+      .form-side {
+        padding: 2rem 1rem;
+        min-height: 380px;
+      }
+
+      .visual-content h2 {
+        font-size: 1.3rem;
+      }
+
+      .visual-content p {
+        font-size: 0.85rem;
+      }
+
+      .form-side h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-side .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-control {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .btn-login {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+      }
+
+      .form-footer {
+        font-size: 0.85rem;
+      }
+
+      .forgot-password a {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Очень маленькие экраны (до 360px) */
+    @media (max-width: 360px) {
+      .visual-side {
+        padding: 1.5rem 0.75rem;
+      }
+
+      .form-side {
+        padding: 1.5rem 0.75rem;
+      }
+
+      .visual-content h2 {
+        font-size: 1.2rem;
+      }
+
+      .visual-content p {
+        font-size: 0.8rem;
+      }
+
+      .form-side h1 {
+        font-size: 1.3rem;
+      }
+
+      .form-control {
+        padding: 0.625rem;
+        font-size: 0.85rem;
+      }
+
+      .btn-login {
+        padding: 0.625rem;
+        font-size: 0.85rem;
+        min-height: 40px;
+      }
+
+      .toggle-password {
+        right: 6px;
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+      }
+    }
+
+    /* Ландшафтная ориентация на мобильных */
+    @media (max-height: 600px) and (orientation: landscape) {
+      body {
+        align-items: flex-start;
+        padding: 0.5rem;
+      }
+
+      .auth-container {
+        flex-direction: row;
+        min-height: auto;
+        height: auto;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .visual-side {
+        min-height: auto;
+        padding: 1.5rem;
+      }
+
+      .form-side {
+        min-height: auto;
+        padding: 1.5rem;
+      }
+
+      .visual-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .visual-content p {
+        font-size: 0.8rem;
+        margin-bottom: 0;
+      }
+
+      .form-side h1 {
+        font-size: 1.3rem;
+      }
+
+      .form-side .subtitle {
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Десктоп оптимизация (> 1200px) */
+    @media (min-width: 1200px) {
+      .auth-container {
+        max-width: 1100px;
+      }
+
+      .visual-side {
+        padding: 3rem;
+      }
+
+      .form-side {
+        padding: 3.5rem 3rem;
+      }
+
+      .visual-content h2 {
+        font-size: 2.2rem;
+      }
+
+      .visual-content p {
+        font-size: 1.1rem;
+      }
+
+      .form-side h1 {
+        font-size: 2.3rem;
+      }
+    }
+
+    /* Темная тема (опционально) */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-light: #1a1f2e;
+        --bg-gradient: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+        --card-bg: rgba(45, 55, 72, 0.97);
+        --text-dark: #e2e8f0;
+        --text-medium: #cbd5e0;
+        --text-light: #a0aec0;
+      }
+
+      body {
+        background: var(--bg-gradient);
+      }
+
+      .auth-container {
+        background: #2d3748;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .form-side {
+        background: var(--card-bg);
+      }
+
+      .form-control {
+        background: #4a5568;
+        border-color: #4a5568;
+        color: white;
+      }
+
+      .form-control:focus {
+        border-color: var(--primary);
+        background: #4a5568;
+        color: white;
+      }
+
+      .form-control::placeholder {
+        color: #a0aec0;
+      }
+
+      .form-footer {
+        border-top-color: #4a5568;
+      }
+    }
+
+    /* Улучшения доступности */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Улучшения для сенсорных устройств */
+    @media (hover: none) and (pointer: coarse) {
+      .btn-login:hover,
+      .toggle-password:hover {
+        transform: none;
+      }
+
+      .btn-login:active,
+      .toggle-password:active {
+        transform: scale(0.98);
+      }
+
+      .btn-login:hover::before {
+        left: -100%;
+      }
+    }
+
+    /* Фокус-стили для клавиатурной навигации */
+    .btn-login:focus-visible,
+    .toggle-password:focus-visible,
+    .form-control:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="visual-side">
+      <div class="visual-content">
+        <h2>Добро пожаловать обратно!</h2>
+        <p>Войдите в свой аккаунт, чтобы продолжить работу с персональными планами питания и прогрессом.</p>
+      </div>
+    </div>
+
+    <div class="form-side">
+      <h1>Чистый Баланс</h1>
+      <p class="subtitle">Войдите в свой аккаунт</p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Email -->
+        <div class="mb-3">
+          <input
+            type="email"
+            name="username"
+            class="form-control"
+            id="email"
+            placeholder="Ваша почта"
+            autocomplete="email"
+            required
+          >
+          {% if form.non_field_errors %}
+            <div class="text-danger mt-2" style="font-size: 0.85rem;">
+              {{ form.non_field_errors|first }}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Пароль -->
+        <div class="password-wrapper">
+          <input
+            type="password"
+            name="password"
+            class="form-control"
+            id="password"
+            placeholder="Пароль"
+            required
+          >
+          <button type="button" class="toggle-password" onclick="togglePassword('password')" aria-label="Показать/скрыть пароль">
+            <i class="bi bi-eye-slash" id="icon-password"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-login">Войти</button>
+
+        <div class="forgot-password">
+          <a href="{% url 'accounts:password_reset' %}">
+            Забыли пароль?
+          </a>
+        </div>
+      </form>
+
+      <div class="form-footer">
+        Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрироваться</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(fieldId) {
+      const field = document.getElementById(fieldId);
+      const icon = document.getElementById(`icon-${fieldId}`);
+      if (!field || !icon) return;
+
+      if (field.type === "password") {
+        field.type = "text";
+        icon.classList.replace("bi-eye-slash", "bi-eye");
+        // Автоматическое скрытие через 5 секунд для безопасности
+        setTimeout(() => {
+          if (field.type === "text") {
+            field.type = "password";
+            icon.classList.replace("bi-eye", "bi-eye-slash");
+          }
+        }, 5000);
+      } else {
+        field.type = "password";
+        icon.classList.replace("bi-eye", "bi-eye-slash");
+      }
+    }
+
+    // Фокус на поле email при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+      const emailField = document.getElementById('email');
+      if (emailField && !emailField.value) {
+        emailField.focus();
+      }
+    });
+  </script>
+
+</body>
+</html>

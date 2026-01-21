@@ -1,0 +1,88 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Профиль клиента — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-person-fill me-2"></i>Профиль клиента</h2>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h5>{{ profile.user.get_full_name|default:profile.user.email }}</h5>
+        <p><strong>Email:</strong> {{ profile.user.email }}</p>
+        {% if profile.date_of_birth %}
+          <p><strong>Дата рождения:</strong> {{ profile.date_of_birth }}</p>
+        {% endif %}
+        {% if profile.gender %}
+          <p><strong>Пол:</strong> {{ profile.get_gender_display }}</p>
+        {% else %}
+          <p><strong>Пол:</strong> <span class="text-muted">Не указан</span></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        {% if profile.height %}
+          <p><strong>Рост:</strong> {{ profile.height }} см</p>
+        {% endif %}
+        {% if profile.initial_weight %}
+          <p><strong>Начальный вес:</strong> {{ profile.initial_weight }} кг</p>
+        {% endif %}
+        {% if profile.goal %}
+          <p><strong>Цель:</strong> {{ profile.goal }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">Медицинские данные</div>
+      <div class="card-body">
+        {% if profile.medical_conditions %}
+          <p><strong>Медицинские условия:</strong></p>
+          <p>{{ profile.medical_conditions|linebreaksbr }}</p>
+        {% else %}
+          <p class="text-muted">Не указаны.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Аллергии</div>
+      <div class="card-body">
+        {% if profile.allergies %}
+          <p>{{ profile.allergies|linebreaksbr }}</p>
+        {% else %}
+          <p class="text-muted">Нет.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Предпочтения в питании</div>
+      <div class="card-body">
+        {% if profile.dietary_preferences %}
+          <p>{{ profile.dietary_preferences|linebreaksbr }}</p>
+        {% else %}
+          <p class="text-muted">Не указаны.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 text-end">
+  <a href="{% url 'accounts:nutritionist_clients' %}" class="btn btn-secondary">Назад к списку клиентов</a>
+</div>
+{% endblock %}

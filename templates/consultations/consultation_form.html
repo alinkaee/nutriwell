@@ -1,0 +1,108 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Консультации клиентов — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-calendar-check me-2"></i>Консультации клиентов</h2>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="row">
+  <!-- Форма назначения -->
+  <div class="col-md-5">
+    <div class="card mb-4">
+      <div class="card-header">Назначить консультацию</div>
+      <div class="card-body">
+        <form method="post" action="{% url 'consultations:nutritionist_create_consultation' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Клиент</label>
+            <select name="client" class="form-control" required>
+              <option value="">Выберите клиента</option>
+              {% for client in user.nutritionist_profile.clients.all %}
+                <option value="{{ client.id }}">{{ client.user.get_full_name|default:client.user.email }}</option>
+              {% endfor %}
+            </select>
+            {% if form.client.errors %}
+              <div class="text-danger">{{ form.client.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            {{ form.date.label_tag }}
+            {{ form.date }}
+            {% if form.date.errors %}
+              <div class="text-danger">{{ form.date.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              {{ form.time.label_tag }}
+              {{ form.time }}
+              {% if form.time.errors %}
+                <div class="text-danger">{{ form.time.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              {{ form.duration_minutes.label_tag }}
+              {{ form.duration_minutes }}
+              {% if form.duration_minutes.errors %}
+                <div class="text-danger">{{ form.duration_minutes.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ form.purpose.label_tag }}
+            {{ form.purpose }}
+            {% if form.purpose.errors %}
+              <div class="text-danger">{{ form.purpose.errors }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Назначить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Список консультаций -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header">Предстоящие и прошедшие консультации</div>
+      <div class="card-body">
+        {% if consultations %}
+          <div class="list-group">
+            {% for consult in consultations %}
+              <div class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ consult.client.user.get_full_name|default:consult.client.user.email }}</strong><br>
+                    <small>{{ consult.date|date:"d E Y" }} в {{ consult.time|time:"H:i" }}</small>
+                  </div>
+                  <span class="badge bg-{% if consult.status == 'scheduled' %}warning{% elif consult.status == 'completed' %}success{% else %}danger{% endif %}">
+                    {{ consult.get_status_display }}
+                  </span>
+                </div>
+                {% if consult.purpose %}
+                  <p class="mb-1 mt-2"><small><strong>Цель:</strong> {{ consult.purpose|truncatewords:15 }}</small></p>
+                {% endif %}
+                {% if consult.notes %}
+                  <p class="mb-0"><small><strong>Заметки:</strong> {{ consult.notes|truncatewords:15 }}</small></p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">Нет запланированных консультаций.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

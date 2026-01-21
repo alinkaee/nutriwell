@@ -1,0 +1,243 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Редактировать план питания — Чистый Баланс{% endblock %}
+
+{% block content %}
+<style>
+.calendar-container {
+  margin: 1.5rem 0;
+}
+.calendar-day {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.calendar-day.has-plan {
+  background-color: var(--primary);
+  color: white;
+}
+.calendar-day:hover {
+  background-color: #e0e0e0;
+}
+.calendar-day.has-plan:hover {
+  background-color: #5a8f7b;
+}
+.modal-form .form-control {
+  font-size: 0.95rem;
+}
+</style>
+
+<h2><i class="bi bi-file-earmark-text me-2"></i>Редактировать план питания</h2>
+
+<p><strong>Программа:</strong> {{ program.name }}</p>
+<p><strong>Клиент:</strong> {{ program.client.user.get_full_name|default:program.client.user.email }}</p>
+
+<!-- Календарь -->
+<div class="calendar-container">
+  <div id="calendar"></div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal fade" id="mealModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">План на <span id="modal-date"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="mealForm">
+          {% csrf_token %}
+          <input type="hidden" id="form-date" name="date">
+
+          <div class="mb-3">
+            <label class="form-label">Завтрак</label>
+            <textarea class="form-control" name="breakfast" rows="2" id="id_breakfast"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Обед</label>
+            <textarea class="form-control" name="lunch" rows="2" id="id_lunch"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ужин</label>
+            <textarea class="form-control" name="dinner" rows="2" id="id_dinner"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Перекусы</label>
+            <textarea class="form-control" name="snacks" rows="2" id="id_snacks"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Примечания</label>
+            <textarea class="form-control" name="notes" rows="2" id="id_notes"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" id="saveMealBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-5">
+  <div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <div>
+      <strong>Как редактировать:</strong><br>
+      Нажмите на любую дату в календаре — откроется окно с формой. Заполните приёмы пищи и нажмите «Сохранить».
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5>Цель клиента</h5>
+          <p>{{ program.client.goal|default:"— Не указана" }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5>Количество дней с планом</h5>
+          <p>{{ filled_dates|length }} из {{ total_days }} дней</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+      <!-- Прогресс -->
+      <div class="mt-4">
+        <h5>Прогресс программы</h5>
+        <div class="progress mb-3">
+          <div class="progress-bar bg-success" role="progressbar"
+               style="width: {{ progress_percent }}%;"
+               aria-valuenow="{{ filled_dates|length }}"
+               aria-valuemin="0"
+               aria-valuemax="{{ total_days }}">
+            {{ progress_percent }}%
+          </div>
+        </div>
+        <small>Заполнено {{ filled_dates|length }} из {{ total_days }} дней</small>
+      </div>
+      <div class="mt-4 p-5 bg-light rounded text-center">
+        <i class="bi bi-calendar-check fs-1 text-muted mb-3"></i>
+        <h6>План питания готов к редактированию</h6>
+        <p class="text-muted">Выберите дату в календаре, чтобы начать.</p>
+      </div>
+  </div>
+
+<!-- jQuery + Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const programId = {{ program.id }};
+const allPlanDates = {{ plan_dates|safe }};     // Все дни программы (1–22 апреля)
+const filledDates = {{ filled_dates|safe }};    // Уже заполненные
+const totalDays = {{ total_days }};
+const csrfToken = '{{ csrf_token }}';
+
+// Определяем месяц и год программы
+const programStart = new Date('{{ program.start_date|date:"Y-m-d" }}');
+const year = programStart.getFullYear();
+const month = programStart.getMonth(); // 0-based
+
+// Генерация календаря
+function renderCalendar() {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+
+  let calendarHTML = '<div class="d-flex flex-wrap gap-1">';
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    // Показываем только дни в рамках программы
+    if (!allPlanDates.includes(dateStr)) {
+      continue;
+    }
+
+    const hasPlan = filledDates.includes(dateStr);
+    const dayClass = hasPlan ? 'calendar-day has-plan' : 'calendar-day';
+    calendarHTML += `<div class="${dayClass}" data-date="${dateStr}">${day}</div>`;
+  }
+  calendarHTML += '</div>';
+  document.getElementById('calendar').innerHTML = calendarHTML;
+
+  // Обработчик клика
+  document.querySelectorAll('.calendar-day').forEach(day => {
+    day.addEventListener('click', () => {
+      const date = day.dataset.date;
+      openMealModal(date);
+    });
+  });
+}
+
+// Открытие модального окна
+function openMealModal(date) {
+  const modalDate = document.getElementById('modal-date');
+  const formDate = document.getElementById('form-date');
+  modalDate.textContent = date;
+  formDate.value = date;
+
+  // Очистка полей
+  ['breakfast', 'lunch', 'dinner', 'snacks', 'notes'].forEach(field => {
+    document.getElementById(`id_${field}`).value = '';
+  });
+
+  // Загрузка данных
+  fetch(`/programs/${programId}/meal-plan/${date}/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data) {
+        document.getElementById('id_breakfast').value = data.breakfast || '';
+        document.getElementById('id_lunch').value = data.lunch || '';
+        document.getElementById('id_dinner').value = data.dinner || '';
+        document.getElementById('id_snacks').value = data.snacks || '';
+        document.getElementById('id_notes').value = data.notes || '';
+      }
+    });
+
+  const modal = new bootstrap.Modal(document.getElementById('mealModal'));
+  modal.show();
+}
+
+// Сохранение
+document.getElementById('saveMealBtn').addEventListener('click', function() {
+  const formData = new FormData(document.getElementById('mealForm'));
+  formData.append('csrfmiddlewaretoken', csrfToken);
+
+  fetch(`/programs/${programId}/meal-plan/save/`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('mealModal'));
+      modal.hide();
+
+      // Обновляем filledDates
+      const date = formData.get('date');
+      if (!filledDates.includes(date)) {
+        filledDates.push(date);
+      }
+      renderCalendar();
+    } else {
+      alert('Ошибка сохранения');
+    }
+  });
+});
+
+renderCalendar();
+</script>
+{% endblock %}

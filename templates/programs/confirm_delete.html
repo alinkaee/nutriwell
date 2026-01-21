@@ -1,0 +1,18 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Удалить программу — Чистый Баланс{% endblock %}
+
+{% block content %}
+<div class="card mx-auto" style="max-width: 500px;">
+  <div class="card-body">
+    <h4 class="text-danger">Вы уверены?</h4>
+    <p>Программа "<strong>{{ program.name }}</strong>" будет удалена без возможности восстановления.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Да, удалить</button>
+      <a href="{% url 'accounts:nutritionist_programs' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

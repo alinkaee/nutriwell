@@ -1,0 +1,602 @@
+[
+  {
+    "model": "products.product",
+    "pk": 1,
+    "fields": {
+      "name": "Яблоко",
+      "calories_per_100g": 52,
+      "protein_per_100g": "0.30",
+      "fat_per_100g": "0.20",
+      "carbs_per_100g": "14.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 2,
+    "fields": {
+      "name": "Банан",
+      "calories_per_100g": 89,
+      "protein_per_100g": "1.10",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "23.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 3,
+    "fields": {
+      "name": "Апельсин",
+      "calories_per_100g": 47,
+      "protein_per_100g": "0.90",
+      "fat_per_100g": "0.10",
+      "carbs_per_100g": "12.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 4,
+    "fields": {
+      "name": "Клубника",
+      "calories_per_100g": 32,
+      "protein_per_100g": "0.70",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "7.70",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 5,
+    "fields": {
+      "name": "Груша",
+      "calories_per_100g": 57,
+      "protein_per_100g": "0.40",
+      "fat_per_100g": "0.10",
+      "carbs_per_100g": "15.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 6,
+    "fields": {
+      "name": "Морковь",
+      "calories_per_100g": 41,
+      "protein_per_100g": "0.90",
+      "fat_per_100g": "0.20",
+      "carbs_per_100g": "10.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 7,
+    "fields": {
+      "name": "Огурец",
+      "calories_per_100g": 15,
+      "protein_per_100g": "0.70",
+      "fat_per_100g": "0.10",
+      "carbs_per_100g": "3.60",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 8,
+    "fields": {
+      "name": "Помидор",
+      "calories_per_100g": 18,
+      "protein_per_100g": "0.90",
+      "fat_per_100g": "0.20",
+      "carbs_per_100g": "3.90",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 9,
+    "fields": {
+      "name": "Брокколи",
+      "calories_per_100g": 34,
+      "protein_per_100g": "2.80",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "7.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 10,
+    "fields": {
+      "name": "Шпинат",
+      "calories_per_100g": 23,
+      "protein_per_100g": "2.90",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "3.60",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 11,
+    "fields": {
+      "name": "Куриная грудка",
+      "calories_per_100g": 165,
+      "protein_per_100g": "31.00",
+      "fat_per_100g": "3.60",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 12,
+    "fields": {
+      "name": "Говядина (постная)",
+      "calories_per_100g": 250,
+      "protein_per_100g": "26.00",
+      "fat_per_100g": "15.00",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 13,
+    "fields": {
+      "name": "Лосось",
+      "calories_per_100g": 208,
+      "protein_per_100g": "20.00",
+      "fat_per_100g": "13.00",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 14,
+    "fields": {
+      "name": "Треска",
+      "calories_per_100g": 82,
+      "protein_per_100g": "18.00",
+      "fat_per_100g": "0.70",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 15,
+    "fields": {
+      "name": "Яйцо куриное",
+      "calories_per_100g": 155,
+      "protein_per_100g": "13.00",
+      "fat_per_100g": "11.00",
+      "carbs_per_100g": "1.10",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 16,
+    "fields": {
+      "name": "Овсяные хлопья",
+      "calories_per_100g": 389,
+      "protein_per_100g": "17.00",
+      "fat_per_100g": "7.00",
+      "carbs_per_100g": "66.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 17,
+    "fields": {
+      "name": "Рис (белый, вареный)",
+      "calories_per_100g": 130,
+      "protein_per_100g": "2.70",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "28.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 18,
+    "fields": {
+      "name": "Гречка (вареная)",
+      "calories_per_100g": 110,
+      "protein_per_100g": "3.50",
+      "fat_per_100g": "0.60",
+      "carbs_per_100g": "23.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 19,
+    "fields": {
+      "name": "Макароны (твердых сортов)",
+      "calories_per_100g": 350,
+      "protein_per_100g": "12.00",
+      "fat_per_100g": "2.00",
+      "carbs_per_100g": "72.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 20,
+    "fields": {
+      "name": "Хлеб цельнозерновой",
+      "calories_per_100g": 247,
+      "protein_per_100g": "9.00",
+      "fat_per_100g": "3.00",
+      "carbs_per_100g": "41.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 21,
+    "fields": {
+      "name": "Молоко (2.5%)",
+      "calories_per_100g": 52,
+      "protein_per_100g": "3.20",
+      "fat_per_100g": "2.50",
+      "carbs_per_100g": "4.80",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 22,
+    "fields": {
+      "name": "Йогурт натуральный (2%)",
+      "calories_per_100g": 60,
+      "protein_per_100g": "4.00",
+      "fat_per_100g": "2.00",
+      "carbs_per_100g": "6.00",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 23,
+    "fields": {
+      "name": "Сыр твердый (45%)",
+      "calories_per_100g": 350,
+      "protein_per_100g": "25.00",
+      "fat_per_100g": "28.00",
+      "carbs_per_100g": "0.00",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 24,
+    "fields": {
+      "name": "Творог (5%)",
+      "calories_per_100g": 121,
+      "protein_per_100g": "17.00",
+      "fat_per_100g": "5.00",
+      "carbs_per_100g": "2.00",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 25,
+    "fields": {
+      "name": "Кефир (1%)",
+      "calories_per_100g": 40,
+      "protein_per_100g": "3.00",
+      "fat_per_100g": "1.00",
+      "carbs_per_100g": "4.00",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 26,
+    "fields": {
+      "name": "Грецкий орех",
+      "calories_per_100g": 654,
+      "protein_per_100g": "15.00",
+      "fat_per_100g": "65.00",
+      "carbs_per_100g": "14.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 27,
+    "fields": {
+      "name": "Миндаль",
+      "calories_per_100g": 579,
+      "protein_per_100g": "21.00",
+      "fat_per_100g": "50.00",
+      "carbs_per_100g": "22.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 28,
+    "fields": {
+      "name": "Фундук",
+      "calories_per_100g": 628,
+      "protein_per_100g": "15.00",
+      "fat_per_100g": "61.00",
+      "carbs_per_100g": "17.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 29,
+    "fields": {
+      "name": "Семена чиа",
+      "calories_per_100g": 486,
+      "protein_per_100g": "17.00",
+      "fat_per_100g": "31.00",
+      "carbs_per_100g": "42.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 30,
+    "fields": {
+      "name": "Арахис",
+      "calories_per_100g": 567,
+      "protein_per_100g": "26.00",
+      "fat_per_100g": "49.00",
+      "carbs_per_100g": "16.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 31,
+    "fields": {
+      "name": "Авокадо",
+      "calories_per_100g": 160,
+      "protein_per_100g": "2.00",
+      "fat_per_100g": "15.00",
+      "carbs_per_100g": "9.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 32,
+    "fields": {
+      "name": "Свекла",
+      "calories_per_100g": 43,
+      "protein_per_100g": "1.60",
+      "fat_per_100g": "0.20",
+      "carbs_per_100g": "10.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 33,
+    "fields": {
+      "name": "Кабачок",
+      "calories_per_100g": 27,
+      "protein_per_100g": "0.60",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "6.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 34,
+    "fields": {
+      "name": "Индейка (филе)",
+      "calories_per_100g": 135,
+      "protein_per_100g": "30.00",
+      "fat_per_100g": "1.00",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 35,
+    "fields": {
+      "name": "Тофу",
+      "calories_per_100g": 76,
+      "protein_per_100g": "8.00",
+      "fat_per_100g": "4.00",
+      "carbs_per_100g": "2.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 36,
+    "fields": {
+      "name": "Чечевица (вареная)",
+      "calories_per_100g": 116,
+      "protein_per_100g": "9.00",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "20.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 37,
+    "fields": {
+      "name": "Киноа (вареная)",
+      "calories_per_100g": 120,
+      "protein_per_100g": "4.00",
+      "fat_per_100g": "2.00",
+      "carbs_per_100g": "21.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 38,
+    "fields": {
+      "name": "Сметана (15%)",
+      "calories_per_100g": 162,
+      "protein_per_100g": "2.50",
+      "fat_per_100g": "15.00",
+      "carbs_per_100g": "3.00",
+      "category": "dairy"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 39,
+    "fields": {
+      "name": "Кокосовая стружка",
+      "calories_per_100g": 660,
+      "protein_per_100g": "7.00",
+      "fat_per_100g": "64.00",
+      "carbs_per_100g": "24.00",
+      "category": "nuts"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 40,
+    "fields": {
+      "name": "Брокколини",
+      "calories_per_100g": 35,
+      "protein_per_100g": "3.00",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "7.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 41,
+    "fields": {
+      "name": "Киви",
+      "calories_per_100g": 61,
+      "protein_per_100g": "1.10",
+      "fat_per_100g": "0.50",
+      "carbs_per_100g": "15.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 42,
+    "fields": {
+      "name": "Манго",
+      "calories_per_100g": 60,
+      "protein_per_100g": "0.80",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "15.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 43,
+    "fields": {
+      "name": "Персик",
+      "calories_per_100g": 39,
+      "protein_per_100g": "0.90",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "10.00",
+      "category": "fruit"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 44,
+    "fields": {
+      "name": "Спаржа",
+      "calories_per_100g": 20,
+      "protein_per_100g": "2.20",
+      "fat_per_100g": "0.10",
+      "carbs_per_100g": "3.90",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 45,
+    "fields": {
+      "name": "Цветная капуста",
+      "calories_per_100g": 25,
+      "protein_per_100g": "1.90",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "5.00",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 46,
+    "fields": {
+      "name": "Скумбрия",
+      "calories_per_100g": 205,
+      "protein_per_100g": "19.00",
+      "fat_per_100g": "14.00",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 47,
+    "fields": {
+      "name": "Креветки",
+      "calories_per_100g": 99,
+      "protein_per_100g": "24.00",
+      "fat_per_100g": "0.30",
+      "carbs_per_100g": "0.00",
+      "category": "protein"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 48,
+    "fields": {
+      "name": "Тыква",
+      "calories_per_100g": 26,
+      "protein_per_100g": "1.00",
+      "fat_per_100g": "0.10",
+      "carbs_per_100g": "6.50",
+      "category": "vegetable"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 49,
+    "fields": {
+      "name": "Фасоль (вареная)",
+      "calories_per_100g": 127,
+      "protein_per_100g": "8.00",
+      "fat_per_100g": "0.50",
+      "carbs_per_100g": "23.00",
+      "category": "grain"
+    }
+  },
+  {
+    "model": "products.product",
+    "pk": 50,
+    "fields": {
+      "name": "Зеленый горошек",
+      "calories_per_100g": 81,
+      "protein_per_100g": "5.40",
+      "fat_per_100g": "0.40",
+      "carbs_per_100g": "14.00",
+      "category": "vegetable"
+    }
+  }
+]

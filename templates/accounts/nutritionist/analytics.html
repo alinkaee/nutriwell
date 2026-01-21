@@ -1,0 +1,344 @@
+{% extends 'accounts/base_dashboard.html' %}
+{% block title %}Аналитика — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-bar-chart me-2"></i>Аналитика</h2>
+
+<!-- Статистика -->
+<div class="row mt-4">
+  <div class="col-md-4">
+    <div class="stats-card">
+      <h3>Всего клиентов</h3>
+      <p>{{ total_clients }}</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stats-card">
+      <h3>Активных программ</h3>
+      <p>{{ active_programs }}</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stats-card">
+      <h3>Завершено</h3>
+      <p>{{ completed_programs }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Список клиентов с последним весом -->
+<div class="mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5>Прогресс клиентов</h5>
+      <small class="text-muted">Последняя запись о весе</small>
+    </div>
+    <div class="card-body">
+      {% if clients_with_progress %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Клиент</th>
+                <th>Цель</th>
+                <th>Начальный вес</th>
+                <th>Текущий вес</th>
+                <th>Изменение</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for client in clients_with_progress %}
+                <tr>
+                  <td>
+                    {{ client.user.get_full_name|default:client.user.email }}
+                    <br>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-1 show-graph-btn" data-client-id="{{ client.user.id }}">
+                      Показать график
+                    </button>
+                    <a href="{% url 'diaries:client_progress_pdf' client.id %}"
+                       class="btn btn-sm btn-outline-secondary mt-1" target="_blank">
+                      <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </a>
+                  </td>
+                  <td>{{ client.goal|truncatewords:4 }}</td>
+                  <td>
+                    {% if client.initial_weight %}{{ client.initial_weight }} кг{% else %}—{% endif %}
+                  </td>
+                  <td>
+                    {% if client.latest_weight %}{{ client.latest_weight }} кг{% else %}—{% endif %}
+                  </td>
+                  <td>
+                    {% if client.weight_change is not none %}
+                      <span class="{% if client.weight_change < 0 %}text-success{% elif client.weight_change > 0 %}text-danger{% else %}text-muted{% endif %}">
+                        {{ client.weight_change|floatformat:"1" }} кг
+                      </span>
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if client.program_status == 'active' %}
+                      <span class="badge bg-success">Активна</span>
+                    {% elif client.program_status == 'archived' %}
+                      <span class="badge bg-secondary">Завершена</span>
+                    {% else %}
+                      <span class="badge bg-warning">Нет программы</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <!-- Скрытый график -->
+                <tr class="graph-row" id="graph-row-{{ client.user.id }}" style="display: none;">
+                  <td colspan="6" class="p-0">
+                    <div class="card mb-3">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6>График прогресса для {{ client.user.get_full_name|default:client.user.email }}</h6>
+                        <button type="button" class="btn btn-sm btn-outline-secondary hide-graph-btn" data-client-id="{{ client.user.id }}">
+                          Скрыть
+                        </button>
+                      </div>
+                      <div class="card-body">
+                        <div class="row">
+                          <!-- График веса -->
+                          <div class="col-md-6">
+                            <canvas id="weightChart-{{ client.user.id }}" style="height: 150px; width: 100%;"></canvas>
+                          </div>
+                          <!-- График объёмов -->
+                          <div class="col-md-6">
+                            <canvas id="measurementsChart-{{ client.user.id }}" style="height: 150px; width: 100%;"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted">Нет данных о прогрессе.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Скрипты для графиков -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const renderedCharts = new Set();
+
+  // Показать график
+  document.querySelectorAll('.show-graph-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const clientId = this.dataset.clientId;
+      const graphRow = document.getElementById(`graph-row-${clientId}`);
+      graphRow.style.display = '';
+
+      // Рендерим только один раз
+      if (!renderedCharts.has(clientId)) {
+        renderClientCharts(clientId);
+        renderedCharts.add(clientId);
+      }
+
+      this.style.display = 'none';
+      graphRow.querySelector('.hide-graph-btn').style.display = '';
+    });
+  });
+
+  // Скрыть график
+  document.querySelectorAll('.hide-graph-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const clientId = this.dataset.clientId;
+      const graphRow = document.getElementById(`graph-row-${clientId}`);
+      graphRow.style.display = 'none';
+
+      const showBtn = graphRow.closest('tbody').querySelector(`.show-graph-btn[data-client-id="${clientId}"]`);
+      if (showBtn) showBtn.style.display = '';
+    });
+  });
+
+  function renderClientCharts(clientId) {
+    const chartDataElement = document.getElementById('chart-data-' + clientId);
+    if (!chartDataElement) {
+      console.error("Данные графика не найдены для клиента:", clientId);
+      return;
+    }
+
+    let rawData = chartDataElement.textContent.trim();
+    if (!rawData || rawData === "{}") {
+      const graphRow = document.getElementById(`graph-row-${clientId}`);
+      graphRow.querySelector('.card-body').innerHTML = `
+        <div class="text-center text-muted py-3">
+          Нет данных для отображения графика.<br>
+          Клиент ещё не добавлял записи о весе.
+        </div>
+      `;
+      return;
+    }
+
+    let chartData;
+    try {
+      chartData = JSON.parse(rawData);
+    } catch (e) {
+      console.error("Ошибка парсинга JSON для клиента:", clientId, e);
+      return;
+    }
+
+    // Вес
+    const weightCtx = document.getElementById(`weightChart-${clientId}`).getContext('2d');
+    new Chart(weightCtx, {
+      type: 'line',
+      data: {
+        labels: chartData.dates,
+        datasets: [{
+          label: 'Вес (кг)',
+          data: chartData.weights,
+          borderColor: '#9BC1BC',
+          backgroundColor: 'rgba(155, 193, 188, 0.1)',
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#666' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: { beginAtZero: false, ticks: { color: '#666' }, grid: { color: 'rgba(0,0,0,0.05)' } }
+        }
+      }
+    });
+
+    // Объёмы
+    const measureCtx = document.getElementById(`measurementsChart-${clientId}`).getContext('2d');
+    new Chart(measureCtx, {
+      type: 'line',
+      data: {
+        labels: chartData.dates,
+        datasets: [
+          {
+            label: 'Грудь',
+            data: chartData.chest,
+            borderColor: '#D4A5A5',
+            backgroundColor: 'rgba(212,165,165,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label: 'Талия',
+            data: chartData.waist,
+            borderColor: '#A5C4D4',
+            backgroundColor: 'rgba(165,196,212,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+          },
+          {
+            label: 'Бёдра',
+            data: chartData.hips,
+            borderColor: '#C8B8DB',
+            backgroundColor: 'rgba(200,184,219,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#333',
+              font: { size: 11 }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#666' }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          y: { beginAtZero: false, ticks: { color: '#666' }, grid: { color: 'rgba(0,0,0,0.05)' } }
+        }
+      }
+    });
+  }
+});
+</script>
+
+<!-- Данные для графиков (вне JavaScript) -->
+{% for client in clients_with_progress %}
+<script type="application/json" id="chart-data-{{ client.user.id }}">
+  {{ client.chart_data_json|safe }}
+</script>
+{% endfor %}
+
+<style>
+.nutrition-slide .card {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  border: 1px solid #e9ecef;
+  border-radius: 0.5rem;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+.graph-row .nutrition-slider-container {
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  border-top: 1px solid #eee;
+}
+
+.graph-row .nutrition-slider {
+  height: 160px;
+  overflow-x: hidden;
+}
+
+.graph-row .nutrition-slide {
+  padding: 0;
+  margin: 0;
+}
+
+.graph-row .card-body {
+  padding: 8px !important;
+  overflow-x: hidden;
+}
+.graph-row .nutrition-slide .card {
+  height: 100%;
+  width: 95%;
+}
+.graph-row .slider-nav {
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+}
+
+  @media (max-width: 768px) {
+  .graph-row .nutrition-slider {
+    height: 140px;
+  }
+  .graph-row .card-body canvas {
+    height: 120px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .graph-row .nutrition-slider {
+    height: 120px;
+  }
+  .graph-row .card-body canvas {
+    height: 100px !important;
+  }
+}
+</style>
+
+{% endblock %}

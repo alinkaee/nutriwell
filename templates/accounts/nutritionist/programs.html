@@ -1,0 +1,36 @@
+{% extends 'accounts/base_dashboard.html' %}
+{% block title %}Программы — Чистый Баланс{% endblock %}
+{% block content %}
+<h2><i class="bi bi-file-earmark-medical me-2"></i>Программы питания</h2>
+<div class="row mt-4">
+  {% for program in programs %}
+    <div class="col-md-6 mb-3">
+      <div class="card">
+        <div class="card-body" style="margin: 8px;">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h5 class="mb-1">{{ program.name }}</h5>
+              <small class="text-muted">Клиент: {{ program.client.user.get_full_name|default:program.client.user.email }}</small>
+            </div>
+            <div>
+              <a href="{% url 'programs:edit_nutrition_plan' program.id %}" class="btn btn-sm btn-outline-primary">✏️ План питания</a>
+              <a href="{% url 'programs:delete_program' program.id %}" class="btn btn-sm btn-outline-danger" title="Удалить">
+                <i class="bi bi-trash"></i>
+              </a>
+            </div>
+          </div>
+          <p><strong>Статус:</strong> {{ program.get_status_display }}</p>
+          <p><small>{{ program.start_date }} — {{ program.end_date|default:"бессрочно" }}</small></p>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <p class="text-muted">Нет созданных программ.</p>
+    </div>
+  {% endfor %}
+</div>
+<div class="mt-4 text-end">
+  <a href="{% url 'programs:create_program' %}" class="btn btn-primary">+ Новая программа</a>
+</div>
+{% endblock %}

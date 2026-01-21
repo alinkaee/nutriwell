@@ -1,0 +1,46 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}План питания — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-file-earmark-medical me-2"></i>План питания</h2>
+
+{% if program %}
+  <div class="alert alert-success">
+    <strong>Активная программа:</strong> {{ program.name }}
+    <br>
+    <small>Цель: {{ program.target_calories }} ккал / день</small>
+  </div>
+
+  <div class="row mt-4">
+    {% for plan in daily_plans %}
+      <div class="col-md-6 mb-3">
+        <div class="card">
+          <div class="card-header">
+            {{ plan.date }}
+          </div>
+          <div class="card-body">
+            <p><strong>Завтрак:</strong> {{ plan.breakfast|linebreaksbr }}</p>
+            <p><strong>Обед:</strong> {{ plan.lunch|linebreaksbr }}</p>
+            <p><strong>Ужин:</strong> {{ plan.dinner|linebreaksbr }}</p>
+            {% if plan.snacks %}<p><strong>Перекусы:</strong> {{ plan.snacks|linebreaksbr }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <p class="text-muted">Нет планов на ближайшие дни.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-warning">
+    У вас пока нет активного плана питания.
+    <a href="#">Создать новый</a>
+  </div>
+{% endif %}
+
+<div class="mt-4 text-end">
+  <a href="#" class="btn btn-primary">Редактировать программу</a>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Консультации клиентов — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-calendar-check me-2"></i>Консультации клиентов</h2>
+
+<div class="row">
+  <!-- Форма назначения -->
+  <div class="col-md-5">
+    <div class="card mb-4">
+      <div class="card-header">Назначить консультацию</div>
+      <div class="card-body">
+        <form method="post" action="{% url 'consultations:nutritionist_create_consultation' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Клиент</label>
+            <select name="client" class="form-control" required>
+              <option value="">Выберите клиента</option>
+              {% for client in user.nutritionist_profile.clients.all %}
+                <option value="{{ client.id }}">{{ client.user.get_full_name|default:client.user.email }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            {{ form.date.label_tag }}
+            {{ form.date }}
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              {{ form.time.label_tag }}
+              {{ form.time }}
+            </div>
+            <div class="col-md-6 mb-3">
+              {{ form.duration_minutes.label_tag }}
+              {{ form.duration_minutes }}
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ form.purpose.label_tag }}
+            {{ form.purpose }}
+          </div>
+          <button type="submit" class="btn btn-primary">Назначить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5>{{ month_name }}</h5>
+      <div>
+        <a href="{{ prev_month }}" class="btn btn-sm btn-outline-secondary me-2">&laquo; Пред</a>
+        <a href="?year={{ today.year }}&month={{ today.month }}" class="btn btn-sm btn-outline-secondary me-2">Сегодня</a>
+        <a href="{{ next_month }}" class="btn btn-sm btn-outline-secondary">След &raquo;</a>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-bordered m-0">
+        <thead class="table-light">
+          <tr>
+            <th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for week in calendar_weeks %}
+            <tr>
+              {% for day in week %}
+                <td class="{% if not day.is_current_month %}text-muted bg-light{% endif %}">
+                  <div class="fw-bold">{{ day.date.day }}</div>
+                  {% if day.consultation %}
+                    <div class="mt-1 small"
+                      style="background-color: {% if day.consultation.status == 'scheduled' %}#fff3cd{% elif day.consultation.status == 'completed' %}#d1e7dd{% else %}#f8d7da{% endif %};
+                             border-left: 4px solid {% if day.consultation.status == 'scheduled' %}#ffc107{% elif day.consultation.status == 'completed' %}#198754{% else %}#dc3545{% endif %};
+                             padding: 4px 6px;
+                             border-radius: 4px;">
+                      {{ day.consultation.client.user.get_full_name|default:day.consultation.client.user.email }}
+                      <br>
+                      <small>{{ day.consultation.time|time:"H:i" }}</small>
+                    </div>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

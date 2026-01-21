@@ -1,0 +1,396 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Редактировать профиль — Чистый Баланс{% endblock %}
+
+{% block content %}
+<style>
+  .profile-form {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #6a9c89;
+    box-shadow: 0 0 0 0.25rem rgba(106, 156, 137, 0.25);
+  }
+
+  textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+  }
+
+  /* Адаптивные стили */
+  @media (max-width: 768px) {
+    .profile-form {
+      max-width: 100%;
+    }
+
+    .form-control, .form-select {
+      padding: 0.5rem 0.65rem;
+      font-size: 0.9rem;
+    }
+
+    .form-label {
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .row {
+      margin-left: -0.5rem;
+      margin-right: -0.5rem;
+    }
+
+    .col-md-6, .col-md-12 {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    .form-control, .form-select {
+      padding: 0.45rem 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+    }
+
+    .mb-3 {
+      margin-bottom: 1rem !important;
+    }
+
+    .mt-2 {
+      margin-top: 0.5rem !important;
+    }
+
+    .mt-4 {
+      margin-top: 1.5rem !important;
+    }
+
+    textarea.form-control {
+      min-height: 80px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .form-control, .form-select {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.82rem;
+    }
+
+    .form-label {
+      font-size: 0.85rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+    }
+
+    .mb-3 {
+      margin-bottom: 0.75rem !important;
+    }
+  }
+
+  /* Ландшафтная ориентация на мобильных */
+  @media (max-height: 600px) and (orientation: landscape) {
+    .profile-form {
+      max-width: 100%;
+    }
+
+    .form-control, .form-select {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    textarea.form-control {
+      min-height: 60px;
+    }
+
+    .mb-3 {
+      margin-bottom: 0.5rem !important;
+    }
+  }
+
+  /* Темная тема */
+  @media (prefers-color-scheme: dark) {
+    .form-label {
+      color: #ddd;
+    }
+
+    .form-control, .form-select {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #6a9c89;
+      background-color: #2d2d2d;
+      color: #fff;
+    }
+
+    .form-control::placeholder {
+      color: #888;
+    }
+
+    .form-actions {
+      border-top-color: #444;
+    }
+  }
+
+  /* Валидация форм */
+  .form-control.is-invalid {
+    border-color: #dc3545;
+  }
+
+  .form-control.is-valid {
+    border-color: #198754;
+  }
+
+  .invalid-feedback {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Группы полей */
+  .field-group {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .field-group-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #6a9c89;
+  }
+
+  @media (max-width: 768px) {
+    .field-group {
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .field-group-title {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .field-group {
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .field-group-title {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>
+
+<h2><i class="bi bi-pencil me-2"></i>Редактировать профиль</h2>
+
+<div class="profile-form">
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="field-group">
+      <div class="field-group-title">Основная информация</div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Имя</label>
+          {{ user_form.first_name }}
+          {% if user_form.first_name.errors %}
+            <div class="invalid-feedback d-block">
+              {{ user_form.first_name.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Фамилия</label>
+          {{ user_form.last_name }}
+          {% if user_form.last_name.errors %}
+            <div class="invalid-feedback d-block">
+              {{ user_form.last_name.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Отчество</label>
+          {{ user_form.middle_name }}
+          {% if user_form.middle_name.errors %}
+            <div class="invalid-feedback d-block">
+              {{ user_form.middle_name.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          {{ user_form.email }}
+          {% if user_form.email.errors %}
+            <div class="invalid-feedback d-block">
+              {{ user_form.email.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Основные данные -->
+    <div class="field-group">
+      <div class="field-group-title">Личные данные</div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Дата рождения</label>
+          {{ profile_form.date_of_birth }}
+          {% if profile_form.date_of_birth.errors %}
+            <div class="invalid-feedback d-block">
+              {{ profile_form.date_of_birth.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Пол</label>
+          {{ profile_form.gender }}
+          {% if profile_form.gender.errors %}
+            <div class="invalid-feedback d-block">
+              {{ profile_form.gender.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <label class="form-label">Рост (см)</label>
+          {{ profile_form.height }}
+          {% if profile_form.height.errors %}
+            <div class="invalid-feedback d-block">
+              {{ profile_form.height.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Начальный вес (кг)</label>
+          {{ profile_form.initial_weight }}
+          {% if profile_form.initial_weight.errors %}
+            <div class="invalid-feedback d-block">
+              {{ profile_form.initial_weight.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div class="field-group">
+      <div class="field-group-title">Дополнительная информация</div>
+
+      <div class="mb-3">
+        <label class="form-label">Цель</label>
+        {{ profile_form.goal }}
+        {% if profile_form.goal.errors %}
+          <div class="invalid-feedback d-block">
+            {{ profile_form.goal.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Медицинские условия</label>
+        {{ profile_form.medical_conditions }}
+        {% if profile_form.medical_conditions.errors %}
+          <div class="invalid-feedback d-block">
+            {{ profile_form.medical_conditions.errors.0 }}
+          </div>
+        {% endif %}
+        <small class="text-muted d-block mt-1">Перечислите через запятую</small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Аллергии</label>
+        {{ profile_form.allergies }}
+        {% if profile_form.allergies.errors %}
+          <div class="invalid-feedback d-block">
+            {{ profile_form.allergies.errors.0 }}
+          </div>
+        {% endif %}
+        <small class="text-muted d-block mt-1">Перечислите через запятую</small>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Предпочтения в питании</label>
+        {{ profile_form.dietary_preferences }}
+        {% if profile_form.dietary_preferences.errors %}
+          <div class="invalid-feedback d-block">
+            {{ profile_form.dietary_preferences.errors.0 }}
+          </div>
+        {% endif %}
+        <small class="text-muted d-block mt-1">Например: вегетарианство, безглютеновая диета</small>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Отмена</a>
+      <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

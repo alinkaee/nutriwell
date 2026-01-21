@@ -1,0 +1,23 @@
+<!-- templates/nutritionist/invite_client.html -->
+{% extends 'accounts/base_dashboard.html' %}
+{% block title %}Пригласить клиента — Чистый Баланс{% endblock %}
+{% block content %}
+<h2><i class="bi bi-envelope-plus me-2"></i>Пригласить клиента</h2>
+
+<p>Введите email клиента — он получит ссылку для регистрации и автоматически будет привязан к вам.</p>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    {{ form.email.label_tag }}
+    {{ form.email }}
+    {% if form.email.errors %}
+      <div class="text-danger mt-1">{{ form.email.errors }}</div>
+    {% endif %}
+  </div>
+  <div class="d-flex justify-content-between">
+    <a href="{% url 'accounts:nutritionist_clients' %}" class="btn btn-secondary">Отмена</a>
+    <button type="submit" class="btn btn-primary">Отправить приглашение</button>
+  </div>
+</form>
+{% endblock %}

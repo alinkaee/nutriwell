@@ -1,0 +1,492 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Обзор — Чистый Баланс{% endblock %}
+
+{% block content %}
+<div class="welcome-card">
+  <h1>Добро пожаловать{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
+  <p class="mb-0">
+    {% if user.role == 'client' %}
+      Здесь вы отслеживаете свой прогресс, следуете индивидуальному плану питания и общаетесь со своим нутрициологом.
+    {% else %}
+      Управляйте своими клиентами, создавайте персонализированные программы и отслеживайте их результаты.
+    {% endif %}
+  </p>
+</div>
+
+{% if user.role == 'client' %}
+  <div class="row g-3 mt-0 mt-md-2">
+    <div class="col-6 col-md-3">
+      <div class="stats-card">
+        <h3>Текущий вес</h3>
+        <p class="mb-0">
+          {% if latest_progress and latest_progress.weight %}
+            {{ latest_progress.weight }} кг
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stats-card">
+        <h3>Начальный вес</h3>
+        <p class="mb-0">
+          {% if profile.initial_weight %}
+            {{ profile.initial_weight }} кг
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stats-card">
+        <h3>Цель</h3>
+        <p class="mb-0">
+          {% if profile.goal %}
+            <span class="goal-text">{{ profile.goal|truncatewords:4 }}</span>
+          {% else %}
+            <a href="{% url 'accounts:edit_client_profile' %}" class="text-primary">Укажите цель</a>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stats-card">
+        <h3>Рост</h3>
+        <p class="mb-0">
+          {% if profile.height %}
+            {{ profile.height }} см
+          {% else %}
+            <a href="{% url 'accounts:edit_client_profile' %}" class="text-primary">Укажите рост</a>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 mt-md-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+      <h4 class="mb-2 mb-md-0">Последние записи в дневнике</h4>
+      <a href="{% url 'diaries:add_diary_entry' %}" class="btn btn-sm btn-outline-primary w-100 w-md-auto">
+        <i class="bi bi-plus-circle me-1"></i> Новая запись
+      </a>
+    </div>
+    {% if latest_diary %}
+      <div class="diary-entries">
+        {% for entry in latest_diary %}
+          <div class="diary-entry-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+              <div class="flex-grow-1 me-md-3">
+                <small class="text-muted d-block mb-1">{{ entry.date|date:"d.m.Y" }}</small>
+                {% if entry.product %}
+                  <p class="mb-0">
+                    <strong class="d-inline d-md-none">Продукт: </strong>
+                    <span class="entry-content">{{ entry.product.name|truncatechars:60 }}</span>
+                  </p>
+                {% elif entry.food_description %}
+                  <p class="mb-0">
+                    <strong class="d-inline d-md-none">Описание: </strong>
+                    <span class="entry-content">{{ entry.food_description|truncatechars:100 }}</span>
+                  </p>
+                {% else %}
+                  <p class="mb-0 text-muted">—</p>
+                {% endif %}
+              </div>
+              {% if entry.meal_type %}
+                <span class="badge bg-primary mt-2 mt-md-0 ms-auto">{{ entry.get_meal_type_display }}</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state text-center py-4">
+        <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+        <p class="text-muted">Нет записей в дневнике</p>
+        <a href="{% url 'diaries:add_diary_entry' %}" class="btn btn-primary btn-sm">
+          Создайте первую запись
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+{% elif user.role == 'nutritionist' %}
+  <div class="row g-3 mt-0 mt-md-2">
+    <div class="col-6 col-md-4">
+      <div class="stats-card">
+        <h3>Активных клиентов</h3>
+        <p class="mb-0">{{ active_clients.count }}</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="stats-card">
+        <h3>Активных программ</h3>
+        <p class="mb-0">{{ active_programs }}</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="stats-card">
+        <h3>Всего клиентов</h3>
+        <p class="mb-0">{{ clients.count }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 mt-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Мои клиенты</h4>
+      {% if clients.count > 3 %}
+        <small class="text-muted d-none d-md-block">Всего: {{ clients.count }}</small>
+      {% endif %}
+    </div>
+
+    {% if clients %}
+      <div class="clients-list">
+        {% for client in clients|slice:":5" %}
+          <div class="client-card">
+            <div class="client-info">
+              <div class="client-avatar">
+                {{ client.user.get_full_name|make_list|first|default:client.user.email|make_list|first }}
+              </div>
+              <div class="client-details">
+                <h5 class="client-name mb-1">
+                  {{ client.user.get_full_name|default:client.user.email|truncatechars:30 }}
+                </h5>
+                {% if client.goal %}
+                  <p class="client-goal mb-0">
+                    <small class="text-muted">Цель: {{ client.goal|truncatewords:3 }}</small>
+                  </p>
+                {% endif %}
+              </div>
+            </div>
+            <div class="client-actions">
+              <a href="{% url 'clients:view_profile' client.id %}"
+                 class="btn btn-sm btn-outline-primary me-1 me-md-2"
+                 title="Профиль">
+                <span class="d-none d-md-inline">Профиль</span>
+                <i class="bi bi-person d-md-none"></i>
+              </a>
+              <a href="{% url 'programs:view_client_nutrition_plan' client.id %}"
+                 class="btn btn-sm btn-outline-info"
+                 title="Анализ">
+                <span class="d-none d-md-inline">Анализ</span>
+                <i class="bi bi-graph-up d-md-none"></i>
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+
+        {% if clients.count > 5 %}
+          <div class="text-center mt-3">
+            <a href="{% url 'accounts:nutritionist_clients' %}" class="btn btn-outline-secondary btn-sm">
+              Показать всех клиентов ({{ clients.count }})
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="empty-state text-center py-5">
+        <i class="bi bi-people display-4 text-muted mb-3"></i>
+        <p class="text-muted mb-3">У вас пока нет клиентов</p>
+        <a href="#" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus-circle me-1"></i> Пригласить клиента
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+<style>
+  /* Адаптивные стили для контента */
+  .goal-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Карточки записей дневника */
+  .diary-entry-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+
+  .diary-entry-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .entry-content {
+    word-break: break-word;
+  }
+
+  /* Карточки клиентов */
+  .client-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+
+  .client-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .client-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .client-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #5a8f7b);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .client-details {
+    flex-grow: 1;
+    min-width: 0; /* Для правильного обрезания текста */
+  }
+
+  .client-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .client-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  /* Состояние пустых списков */
+  .empty-state {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Адаптивность */
+  /* Планшеты */
+  @media (max-width: 991px) {
+    .client-card {
+      padding: 0.875rem;
+    }
+
+    .diary-entry-card {
+      padding: 0.875rem;
+    }
+
+    .client-avatar {
+      width: 36px;
+      height: 36px;
+      font-size: 0.9rem;
+    }
+
+    .client-name {
+      font-size: 0.95rem;
+    }
+  }
+
+  /* Мобильные устройства */
+  @media (max-width: 767px) {
+    .welcome-card h1 {
+      font-size: 1.5rem !important;
+    }
+
+    .welcome-card p {
+      font-size: 0.95rem;
+    }
+
+    .client-card {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .client-info {
+      width: 100%;
+    }
+
+    .client-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .client-actions .btn {
+      flex: 1;
+      text-align: center;
+    }
+
+    .diary-entry-card {
+      padding: 0.75rem;
+    }
+
+    .entry-content {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Маленькие мобильные устройства */
+  @media (max-width: 575px) {
+    .welcome-card {
+      padding: 1.25rem !important;
+    }
+
+    .welcome-card h1 {
+      font-size: 1.35rem !important;
+    }
+
+    .stats-card {
+      padding: 0.875rem !important;
+    }
+
+    .stats-card h3 {
+      font-size: 0.85rem;
+    }
+
+    .stats-card p {
+      font-size: 1.25rem;
+    }
+
+    .client-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 0.85rem;
+    }
+
+    .client-name {
+      font-size: 0.9rem;
+    }
+
+    .client-actions .btn {
+      padding: 0.375rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+    }
+  }
+
+  /* Очень маленькие экраны */
+  @media (max-width: 360px) {
+    .welcome-card h1 {
+      font-size: 1.25rem !important;
+    }
+
+    .stats-card {
+      padding: 0.75rem !important;
+    }
+
+    .stats-card p {
+      font-size: 1.1rem;
+    }
+
+    .client-card {
+      padding: 0.75rem;
+    }
+
+    .diary-entry-card {
+      padding: 0.625rem;
+      font-size: 0.85rem;
+    }
+
+    .client-actions .btn {
+      padding: 0.25rem 0.375rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  /* Ландшафтная ориентация на мобильных */
+  @media (max-height: 600px) and (orientation: landscape) {
+    .welcome-card {
+      padding: 1rem !important;
+      margin-bottom: 1rem !important;
+    }
+
+    .stats-card {
+      padding: 0.75rem !important;
+    }
+
+    .client-card,
+    .diary-entry-card {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  /* Десктоп оптимизация */
+  @media (min-width: 1200px) {
+    .client-card {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .client-info {
+      flex: 1;
+    }
+
+    .client-actions {
+      flex-shrink: 0;
+    }
+
+    .diary-entries {
+      display: grid;
+      gap: 0.75rem;
+    }
+  }
+
+  /* Темная тема */
+  @media (prefers-color-scheme: dark) {
+    .diary-entry-card,
+    .client-card,
+    .empty-state {
+      background: var(--card-bg);
+      border: 1px solid #3d3d3d;
+    }
+
+    .client-avatar {
+      background: linear-gradient(135deg, var(--primary), #4a7d6a);
+    }
+  }
+
+  /* Улучшения доступности */
+  .btn:focus,
+  a:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+</style>
+{% endblock %}

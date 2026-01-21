@@ -1,0 +1,284 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Дневник питания — Чистый Баланс{% endblock %}
+
+{% block content %}
+<style>
+  .nutrition-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .nutrition-value-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    font-size: 0.9rem;
+  }
+
+  .nutrition-value-label {
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .nutrition-value-amount {
+    color: #212529;
+  }
+
+  /* Адаптивные стили для разных устройств */
+
+  /* Большие десктопы (более 1400px) */
+  @media (min-width: 1400px) {
+    .nutrition-values {
+      gap: 1rem 2rem;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.95rem;
+    }
+  }
+
+  /* Ноутбуки и десктопы (992px - 1399px) */
+  @media (min-width: 992px) and (max-width: 1399px) {
+    .nutrition-values {
+      gap: 0.5rem 1.25rem;
+    }
+  }
+
+  /* Планшеты (768px - 991px) */
+  @media (min-width: 768px) and (max-width: 991px) {
+    .nutrition-values {
+      gap: 0.5rem 1rem;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Большие телефоны (576px - 767px) */
+  @media (min-width: 576px) and (max-width: 767px) {
+    .nutrition-values {
+      gap: 0.5rem 0.75rem;
+      justify-content: flex-start;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.82rem;
+    }
+  }
+
+  /* Средние и маленькие телефоны (до 575px) */
+  @media (max-width: 575px) {
+    .nutrition-values {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.8rem;
+      width: 100%;
+      justify-content: space-between;
+      padding: 0.1rem 0;
+    }
+
+    .nutrition-value-label {
+      min-width: 70px;
+    }
+
+    .nutrition-value-amount {
+      text-align: right;
+    }
+  }
+
+  /* Очень маленькие телефоны (до 400px) */
+  @media (max-width: 400px) {
+    .nutrition-values {
+      gap: 0.3rem;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.78rem;
+    }
+
+    .nutrition-value-label {
+      min-width: 60px;
+    }
+  }
+
+  /* Ландшафтная ориентация на мобильных */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .nutrition-values {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+    }
+
+    .nutrition-value-item {
+      font-size: 0.8rem;
+      width: auto;
+      justify-content: flex-start;
+    }
+  }
+
+  /* Карточки */
+  .card {
+    transition: transform 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  /* Заголовки карточек */
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  /* Кнопки действий */
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 575px) {
+    .action-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .action-buttons a {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  /* Сетка карточек */
+  @media (min-width: 768px) {
+    .col-md-6 {
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .col-md-6 {
+      margin-bottom: 0.75rem;
+    }
+
+    .card {
+      margin-bottom: 0.75rem;
+    }
+  }
+</style>
+
+<h2><i class="bi bi-journal-text me-2"></i>Дневник питания</h2>
+
+<div class="mb-4">
+  <a href="{% url 'diaries:add_diary_entry' %}" class="btn btn-primary">+ Новая запись</a>
+</div>
+
+<!-- Модальное окно добавления записи -->
+<div class="modal fade" id="addEntryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Добавить запись</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Список записей -->
+<div class="row">
+{% for entry in entries %}
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>{{ entry.date|date:"d E Y" }} {% if entry.time %}{{ entry.time|time:"H:i" }}{% endif %}</span>
+      </div>
+      <div class="card-body">
+        {% if entry.product %}
+          <p><strong>Продукт:</strong> {{ entry.product.name }}</p>
+        {% elif entry.food_description %}
+          <p><strong>Описание:</strong> {{ entry.food_description }}</p>
+        {% endif %}
+
+        <!-- Выводим БЖУ и калории -->
+        {% if entry.calories or entry.protein or entry.fat or entry.carbs %}
+          <hr>
+          <div class="nutrition-values">
+            {% if entry.calories %}
+              <div class="nutrition-value-item">
+                <span class="nutrition-value-label">Ккал:</span>
+                <span class="nutrition-value-amount">{{ entry.calories }} ккал</span>
+              </div>
+            {% endif %}
+            {% if entry.protein %}
+              <div class="nutrition-value-item">
+                <span class="nutrition-value-label">Белки:</span>
+                <span class="nutrition-value-amount">{{ entry.protein }} г</span>
+              </div>
+            {% endif %}
+            {% if entry.fat %}
+              <div class="nutrition-value-item">
+                <span class="nutrition-value-label">Жиры:</span>
+                <span class="nutrition-value-amount">{{ entry.fat }} г</span>
+              </div>
+            {% endif %}
+            {% if entry.carbs %}
+              <div class="nutrition-value-item">
+                <span class="nutrition-value-label">Углеводы:</span>
+                <span class="nutrition-value-amount">{{ entry.carbs }} г</span>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if entry.notes %}
+          <hr>
+          <p class="mb-0"><small><strong>Примечания:</strong> {{ entry.notes }}</small></p>
+        {% endif %}
+
+        <div class="mt-3 d-flex justify-content-end gap-2 action-buttons">
+          <a href="{% url 'diaries:edit_diary_entry' entry.id %}" class="btn btn-sm btn-outline-primary">✏️ Редактировать</a>
+          <a href="{% url 'diaries:delete_diary_entry' entry.id %}" class="btn btn-sm btn-outline-danger">🗑️ Удалить</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% empty %}
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-journal-x display-4 text-muted mb-3"></i>
+        <p class="text-muted mb-0">Нет записей в дневнике.</p>
+        <p class="text-muted small mt-2">Начните отслеживать своё питание, добавив первую запись.</p>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+{% endblock %}

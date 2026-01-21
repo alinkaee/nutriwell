@@ -1,0 +1,81 @@
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Редактировать профиль — Чистый Баланс{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-pencil me-2"></i>Редактировать профиль</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <!-- Личные данные (User) -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      {{ user_form.first_name.label_tag }}
+      {{ user_form.first_name }}
+    </div>
+    <div class="col-md-6">
+      {{ user_form.last_name.label_tag }}
+      {{ user_form.last_name }}
+    </div>
+    <div class="col-md-6 mt-2">
+      {{ user_form.middle_name.label_tag }}
+      {{ user_form.middle_name }}
+    </div>
+    <div class="col-md-6 mt-2">
+      {{ user_form.email.label_tag }}
+      {{ user_form.email }}
+    </div>
+  </div>
+
+  <!-- Профессиональные данные (NutritionistProfile) -->
+  <div class="mb-3">
+    {{ profile_form.specialization.label_tag }}
+    {{ profile_form.specialization }}
+  </div>
+
+  <div class="mb-3">
+    {{ profile_form.description.label_tag }}
+    {{ profile_form.description }}
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      {{ profile_form.phone.label_tag }}
+      {{ profile_form.phone }}
+    </div>
+    <div class="col-md-6">
+      {{ profile_form.website.label_tag }}
+      {{ profile_form.website }}
+    </div>
+  </div>
+
+  <!-- Документы -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      {{ profile_form.certificate.label_tag }}
+      {{ profile_form.certificate }}
+      {% if profile_form.instance.certificate %}
+        <div class="mt-1">
+          <a href="{{ profile_form.instance.certificate.url }}" target="_blank">Просмотреть текущий сертификат</a>
+        </div>
+      {% endif %}
+    </div>
+    <div class="col-md-6">
+      {{ profile_form.diploma.label_tag }}
+      {{ profile_form.diploma }}
+      {% if profile_form.instance.diploma %}
+        <div class="mt-1">
+          <a href="{{ profile_form.instance.diploma.url }}" target="_blank">Просмотреть текущий диплом</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Кнопки -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Отмена</a>
+    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+  </div>
+</form>
+{% endblock %}
