@@ -499,18 +499,11 @@
 <body>
 
 <!-- Навигация -->
-<!-- Навигация -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
   <div class="container">
     <a class="navbar-brand" href="{% url 'core:home' %}">
       <img src="{% static 'img/logo.png' %}" alt="NutriWell" height="32">
     </a>
-
-    <!-- Бургер-меню (только на мобильных) -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileSidebar"
-            aria-controls="mobileSidebar" aria-expanded="false" aria-label="Переключить навигацию">
-      <span class="navbar-toggler-icon"></span>
-    </button>
 
     <div class="d-flex align-items-center">
       {% if user.is_authenticated %}
@@ -563,83 +556,164 @@
           {% endfor %}
         </ul>
       </div>
+          <!-- Бургер-меню (только на мобильных) -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileSidebar"
+              aria-controls="mobileSidebar" aria-expanded="false" aria-label="Переключить навигацию">
+        <span class="navbar-toggler-icon"></span>
+      </button>
     </div>
   </div>
 </nav>
 
 <div class="container-fluid">
   <div class="row">
-    <div class="col-lg-3 col-md-4">
+    <!-- Боковая панель (скрыта на мобильных) -->
+    <div class="col-lg-3 col-md-4 d-none d-lg-block">
       <div class="sidebar">
         <ul class="nav flex-column">
-  {% if user.role == 'client' %}
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
-        <i class="bi bi-house-door"></i> Обзор
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="{% url 'diaries:progress_view' %}" class="nav-link {% if request.resolver_match.url_name == 'progress' %}active{% endif %}">
-        <i class="bi bi-graph-up-arrow"></i> Прогресс
-      </a>
-    </li>
-    {% if user.role == 'client' and active_program %}
-      <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'view_nutrition_plan' %}active{% endif %}"
-          href="{% url 'programs:view_nutrition_plan' active_program.id %}">
-          <i class="bi bi-file-earmark-medical"></i> План питания
-        </a>
-      </li>
-    {% endif %}
-    <li class="nav-item">
-        <a href="{% url 'diaries:view_diary' %}" class="nav-link {% if request.path == '/diaries/diary/' %}active{% endif %}">
-          <i class="bi bi-journal-text me-2"></i> Дневник
-        </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'client_consultations' %}active{% endif %}" href="{% url 'consultations:client_consultations' %}">
-        <i class="bi bi-calendar-check me-2"></i>Консультации
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'clients:edit_profile' %}">
-        <i class="bi bi-pencil-square"></i> Редактировать профиль
-      </a>
-    </li>
+          {% if user.role == 'client' %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                <i class="bi bi-house-door"></i> Обзор
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'diaries:progress_view' %}" class="nav-link {% if request.resolver_match.url_name == 'progress_view' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> Прогресс
+              </a>
+            </li>
+            {% if active_program %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'view_nutrition_plan' %}active{% endif %}"
+                  href="{% url 'programs:view_nutrition_plan' active_program.id %}">
+                  <i class="bi bi-file-earmark-medical"></i> План питания
+                </a>
+              </li>
+            {% endif %}
+            <li class="nav-item">
+              <a href="{% url 'diaries:view_diary' %}" class="nav-link {% if request.path == '/diaries/diary/' %}active{% endif %}">
+                <i class="bi bi-journal-text me-2"></i> Дневник
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'client_consultations' %}active{% endif %}" href="{% url 'consultations:client_consultations' %}">
+                <i class="bi bi-calendar-check me-2"></i>Консультации
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:edit_profile' %}">
+                <i class="bi bi-pencil-square"></i> Редактировать профиль
+              </a>
+            </li>
+          {% elif user.role == 'nutritionist' %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                <i class="bi bi-house-door"></i> Обзор
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_clients' %}active{% endif %}" href="{% url 'accounts:nutritionist_clients' %}">
+                <i class="bi bi-people"></i> Мои клиенты
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_programs' %}active{% endif %}" href="{% url 'accounts:nutritionist_programs' %}">
+                <i class="bi bi-file-earmark-medical"></i> Программы
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_consultations' %}active{% endif %}" href="{% url 'consultations:nutritionist_consultations' %}">
+                <i class="bi bi-calendar-check me-2"></i>Консультации
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_analytics' %}active{% endif %}" href="{% url 'accounts:nutritionist_analytics' %}">
+                <i class="bi bi-bar-chart"></i> Аналитика
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'nutritionists:edit_profile' %}">
+                <i class="bi bi-pencil-square"></i> Редактировать профиль
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
 
-  {% elif user.role == 'nutritionist' %}
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
-        <i class="bi bi-house-door"></i> Обзор
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_clients' %}active{% endif %}" href="{% url 'accounts:nutritionist_clients' %}">
-        <i class="bi bi-people"></i> Мои клиенты
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_programs' %}active{% endif %}" href="{% url 'accounts:nutritionist_programs' %}">
-        <i class="bi bi-file-earmark-medical"></i> Программы
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'client_consultations' %}active{% endif %}" href="{% url 'consultations:nutritionist_consultations' %}">
-        <i class="bi bi-calendar-check me-2"></i>Консультации
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_analytics' %}active{% endif %}" href="{% url 'accounts:nutritionist_analytics' %}">
-        <i class="bi bi-bar-chart"></i> Аналитика
-      </a>
-    </li>
-          <li class="nav-item">
-  <a class="nav-link" href="{% url 'nutritionists:edit_profile' %}">
-    <i class="bi bi-pencil-square"></i> Редактировать профиль
-  </a>
-</li>
-  {% endif %}
-</ul>
+    <!-- Мобильное меню (только на мобильных) -->
+    <div class="col-12 d-lg-none">
+      <div class="collapse" id="mobileSidebar">
+        <div class="sidebar p-3 mb-3" style="background: white; border-radius: 12px; box-shadow: var(--shadow-sm);">
+          <ul class="nav flex-column">
+            {% if user.role == 'client' %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                  <i class="bi bi-house-door"></i> Обзор
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'diaries:progress_view' %}" class="nav-link {% if request.resolver_match.url_name == 'progress_view' %}active{% endif %}">
+                  <i class="bi bi-graph-up-arrow"></i> Прогресс
+                </a>
+              </li>
+              {% if active_program %}
+                <li class="nav-item">
+                  <a class="nav-link {% if request.resolver_match.url_name == 'view_nutrition_plan' %}active{% endif %}"
+                    href="{% url 'programs:view_nutrition_plan' active_program.id %}">
+                    <i class="bi bi-file-earmark-medical"></i> План питания
+                  </a>
+                </li>
+              {% endif %}
+              <li class="nav-item">
+                <a href="{% url 'diaries:view_diary' %}" class="nav-link {% if request.path == '/diaries/diary/' %}active{% endif %}">
+                  <i class="bi bi-journal-text me-2"></i> Дневник
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'client_consultations' %}active{% endif %}" href="{% url 'consultations:client_consultations' %}">
+                  <i class="bi bi-calendar-check me-2"></i>Консультации
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'clients:edit_profile' %}">
+                  <i class="bi bi-pencil-square"></i> Редактировать профиль
+                </a>
+              </li>
+            {% elif user.role == 'nutritionist' %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                  <i class="bi bi-house-door"></i> Обзор
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_clients' %}active{% endif %}" href="{% url 'accounts:nutritionist_clients' %}">
+                  <i class="bi bi-people"></i> Мои клиенты
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_programs' %}active{% endif %}" href="{% url 'accounts:nutritionist_programs' %}">
+                  <i class="bi bi-file-earmark-medical"></i> Программы
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_consultations' %}active{% endif %}" href="{% url 'consultations:nutritionist_consultations' %}">
+                  <i class="bi bi-calendar-check me-2"></i>Консультации
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nutritionist_analytics' %}active{% endif %}" href="{% url 'accounts:nutritionist_analytics' %}">
+                  <i class="bi bi-bar-chart"></i> Аналитика
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'nutritionists:edit_profile' %}">
+                  <i class="bi bi-pencil-square"></i> Редактировать профиль
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
       </div>
     </div>
 

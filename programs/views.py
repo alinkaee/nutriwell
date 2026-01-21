@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import timedelta
 
-from django.utils import timezone
+from django.utils import timezone, formats
 
 from .forms import NutritionProgramForm, ClientMealPlanForm
 from django.shortcuts import render, redirect, get_object_or_404
@@ -132,50 +132,66 @@ def save_meal_plan(request, program_id):
     return JsonResponse({'success': False})
 
 
+
 @login_required
 def view_nutrition_plan(request, program_id):
+    program = get_object_or_404(NutritionProgram, id=program_id)
 
-    program = get_object_or_404(NutritionProgram, id=program_id, client__user=request.user)
+    # Проверка доступа
+    if program.client.user != request.user and program.nutritionist.user != request.user:
+        messages.error(request, "У вас нет доступа к этой программе.")
+        return redirect('accounts:dashboard')
 
-    # Получаем все даты, где есть планы
-    all_dates = DailyMealPlan.objects.filter(program=program).values_list('date', flat=True).order_by('date')
+    # Проверка дат
+    if not program.start_date or not program.end_date:
+        messages.error(request, "Программа не имеет корректных дат начала и окончания.")
+        return redirect('accounts:dashboard')
 
-    if not all_dates:
-        # Если нет планов — показываем 7 дней с start_date
-        start_date = program.start_date or timezone.now().date()
-        dates = [start_date + timedelta(days=i) for i in range(7)]
-    else:
-        # Показываем все даты, где есть данные
-        dates = list(all_dates)
+    from datetime import timedelta
+    total_days = (program.end_date - program.start_date).days + 1
+    all_program_dates = [program.start_date + timedelta(days=i) for i in range(total_days)]
 
-    # Получаем или создаём планы
-    plans = []
-    for date in dates:
-        plan, created = DailyMealPlan.objects.get_or_create(program=program, date=date)
-        plans.append(plan)
+    existing_plans = {
+        plan.date: plan
+        for plan in DailyMealPlan.objects.filter(
+            program=program,
+            date__range=[program.start_date, program.end_date]
+        )
+    }
 
-    if request.method == 'POST':
-        for plan in plans:
-            form = ClientMealPlanForm(request.POST, instance=plan, prefix=str(plan.date))
-            if form.is_valid():
-                form.save()
-        messages.success(request, 'Ваш прогресс успешно обновлён!')
-        return redirect('programs:view_nutrition_plan', program_id=program.id)
+    # Группируем по месяцам
+    from collections import defaultdict
+    months = defaultdict(list)
+    for date in all_program_dates:
+        key = (date.year, date.month)
+        months[key].append(date)
 
-    forms = {}
-    for plan in plans:
-        forms[plan.date] = ClientMealPlanForm(instance=plan, plan_id=plan.id)
+    month_options = []
+    for (year, month), dates in sorted(months.items()):
+        month_options.append({
+            'year': year,
+            'month': month,
+            'month_name': formats.date_format(timezone.datetime(year, month, 1), "F"),
+            'value': f"{year}-{month}",
+            'dates': dates,
+        })
 
-    forms = {}
-    for plan in plans:
-        forms[plan.date] = ClientMealPlanForm(instance=plan, prefix=str(plan.date))
+    selected_year = int(request.GET.get('year', program.start_date.year))
+    selected_month = int(request.GET.get('month', program.start_date.month))
 
-    return render(request, 'programs/view_nutrition_plan.html', {
+    # 🔥 Передаём ТОЛЬКО нужные дни для выбранного месяца
+    current_month_key = (selected_year, selected_month)
+    current_month_dates = months.get(current_month_key, [])
+
+    context = {
         'program': program,
-        'plans_forms': zip(plans, [forms[p.date] for p in plans]),
-        'dates': dates,
-    })
-
+        'month_options': month_options,
+        'selected_year': selected_year,
+        'selected_month': selected_month,
+        'current_month_dates': current_month_dates,  # ← вот это используем в шаблоне
+        'existing_plans': existing_plans,
+    }
+    return render(request, 'programs/view_nutrition_plan.html', context)
 
 @csrf_protect
 def update_meal_plan(request):

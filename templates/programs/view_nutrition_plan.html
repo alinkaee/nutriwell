@@ -1,669 +1,59 @@
-<!-- templates/programs/view_nutrition_plan.html -->
 {% extends 'accounts/base_dashboard.html' %}
+{% load static %}
+{% load dict_extras %}
 
 {% block title %}План питания — Чистый Баланс{% endblock %}
 
 {% block content %}
-
 <style>
-.card-body {
-  min-width: 320px;
-  max-width: 400px;
+.meal-card {
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  background: #f8f9fa;
+}
+.meal-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
   font-size: 0.95rem;
 }
-
-.nutrition-card {
-  width: auto;
-  min-width: 320px;
-  max-width: 400px;
-  margin: 0 auto;
+.meal-label {
+  font-weight: 600;
+  color: var(--primary);
+}
+.meal-content {
+  color: #555;
 }
 
-.form-check-label {
-  font-size: 0.9rem;
-  margin-left: 0.5rem;
+.meal-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
 }
-
-.form-check-input {
+.meal-item:last-child {
+  border-bottom: none;
+}
+.meal-checkbox .form-check-input {
   width: 1.2em;
   height: 1.2em;
-  margin-top: 0.1rem;
 }
-
-.form-control-sm {
-  font-size: 0.9rem;
-  padding: 0.375rem 0.5rem;
-  height: 30px;
-}
-
-/* ИСПРАВЛЕННЫЕ СТИЛИ ДЛЯ СТРОК С ПИТАНИЕМ */
-.meal-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: nowrap;
-  min-height: 32px;
-}
-
-.meal-label {
-  flex: 0 0 70px;
-  font-weight: 500;
-  color: #333;
-  margin-right: 0.5rem;
-  white-space: nowrap;
-}
-
-.meal-content {
-  flex: 1;
-  min-width: 0;
-  margin-right: 0.75rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-
-.meal-checkbox {
-  flex: 0 0 auto;
-  margin-right: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .meal-time {
-  flex: 0 0 85px;
-  display: flex;
-  align-items: center;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
 }
-
-.meal-time input {
-  width: 100% !important;
-  min-width: 85px;
-}
-
-/* ИСПРАВЛЕННЫЕ СТИЛИ СЛАЙДЕРА */
-.nutrition-slider-container {
-  position: relative;
-  overflow: hidden;
-  padding: 1rem 0;
-  cursor: grab;
-  width: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.nutrition-slider-container:active {
-  cursor: grabbing;
-}
-
-.nutrition-slider {
-  display: flex;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  width: max-content;
-  will-change: transform;
-  height: 100%;
-}
-
-/* БАЗОВЫЕ СТИЛИ ДЛЯ СЛАЙДОВ - ИСПРАВЛЕНО */
-.nutrition-slide {
-  padding: 0.5rem;
-  opacity: 0.4;
-  transform: scale(0.9);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-sizing: border-box;
-  min-width: 0;
-  flex-shrink: 0;
-}
-
-.nutrition-slide.active {
-  opacity: 1;
-  transform: scale(1);
-  box-shadow: 0 8px 32px rgba(0,123,255,0.25);
-}
-
-.slider-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--primary, #6a9c89);
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 1.3rem;
+.day-header {
   cursor: pointer;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: all 0.2s ease;
-  opacity: 0.9;
-  user-select: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background 0.2s;
 }
-
-.slider-nav:hover:not(:disabled) {
-  transform: translateY(-50%) scale(1.1);
-  background: #5a8f7b;
-  opacity: 1;
+.day-header:hover {
+  background: #f1f3f5;
 }
-
-.slider-nav:disabled,
-.slider-nav.opacity-low {
-  opacity: 0.3;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.slider-nav-prev {
-  left: 1rem;
-}
-
-.slider-nav-next {
-  right: 1rem;
-}
-
-/* ИСПРАВЛЕННЫЕ АДАПТИВНЫЕ СТИЛИ ДЛЯ КАРТОЧЕК */
-
-/* ОЧЕНЬ большие экраны (более 1800px) */
-@media (min-width: 1800px) {
-  .nutrition-slider-container {
-    padding: 2rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 3rem;
-    padding: 0 6rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 460px;
-  }
-
-  .nutrition-card {
-    min-width: 420px;
-    max-width: 460px;
-  }
-
-  .meal-label {
-    flex: 0 0 100px;
-    font-size: 1rem;
-  }
-
-  .meal-content {
-    font-size: 1rem;
-  }
-
-  .meal-time {
-    flex: 0 0 110px;
-  }
-
-  .meal-time input {
-    min-width: 110px;
-  }
-}
-
-/* Большие десктопы (1400px - 1799px) */
-@media (min-width: 1400px) and (max-width: 1799px) {
-  .nutrition-slider-container {
-    padding: 1.5rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 2.5rem;
-    padding: 0 5rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 420px;
-  }
-
-  .nutrition-card {
-    min-width: 380px;
-    max-width: 420px;
-  }
-
-  .meal-label {
-    flex: 0 0 90px;
-  }
-
-  .meal-time {
-    flex: 0 0 100px;
-  }
-
-  .meal-time input {
-    min-width: 100px;
-  }
-}
-
-/* Стандартные десктопы (1200px - 1399px) - ИСПРАВЛЕНО */
-@media (min-width: 1200px) and (max-width: 1399px) {
-  .nutrition-slider-container {
-    padding: 1.5rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 2rem;
-    padding: 0 4rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 380px;
-  }
-
-  .nutrition-card {
-    min-width: 350px;
-    max-width: 380px;
-  }
-
-  .meal-label {
-    flex: 0 0 85px;
-  }
-
-  .meal-time {
-    flex: 0 0 95px;
-  }
-
-  .meal-time input {
-    min-width: 95px;
-  }
-}
-
-/* Ноутбуки (992px - 1199px) - ИСПРАВЛЕНО */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .nutrition-slider-container {
-    padding: 1.25rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 1.75rem;
-    padding: 0 3.5rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 360px;
-  }
-
-  .nutrition-card {
-    min-width: 320px;
-    max-width: 360px;
-  }
-
-  .card-body {
-    min-width: 320px;
-  }
-
-  .meal-label {
-    flex: 0 0 80px;
-  }
-
-  .meal-time {
-    flex: 0 0 90px;
-  }
-
-  .meal-time input {
-    min-width: 90px;
-  }
-
-  .slider-nav {
-    width: 42px;
-    height: 42px;
-  }
-}
-
-/* Планшеты в ландшафте (768px - 991px) - ИСПРАВЛЕНО */
-@media (min-width: 768px) and (max-width: 991px) {
-  .nutrition-slider-container {
-    padding: 1rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 1.5rem;
-    padding: 0 3rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 320px;
-  }
-
-  .nutrition-card {
-    min-width: 290px;
-    max-width: 320px;
-  }
-
-  .card-body {
-    min-width: 290px;
-    padding: 1rem !important;
-  }
-
-  .meal-row {
-    margin-bottom: 0.6rem;
-  }
-
-  .meal-label {
-    flex: 0 0 75px;
-    font-size: 0.9rem;
-  }
-
-  .meal-content {
-    font-size: 0.9rem;
-    margin-right: 0.6rem;
-  }
-
-  .meal-time {
-    flex: 0 0 85px;
-  }
-
-  .meal-time input {
-    min-width: 85px;
-    padding: 0.3rem 0.4rem;
-  }
-
-  .slider-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-
-  .slider-nav-prev {
-    left: 0.75rem;
-  }
-
-  .slider-nav-next {
-    right: 0.75rem;
-  }
-}
-
-/* Большие телефоны и планшеты в портрете (576px - 767px) - ИСПРАВЛЕНО */
-@media (min-width: 576px) and (max-width: 767px) {
-  .nutrition-slider-container {
-    padding: 0.75rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 1.25rem;
-    padding: 0 2.5rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 280px;
-  }
-
-  .nutrition-card {
-    min-width: 260px;
-    max-width: 280px;
-  }
-
-  .card-body {
-    min-width: 260px;
-    padding: 0.9rem !important;
-  }
-
-  .meal-row {
-    margin-bottom: 0.5rem;
-  }
-
-  .meal-label {
-    flex: 0 0 70px;
-    font-size: 0.85rem;
-  }
-
-  .meal-content {
-    font-size: 0.85rem;
-    margin-right: 0.5rem;
-  }
-
-  .meal-time {
-    flex: 0 0 80px;
-  }
-
-  .meal-time input {
-    min-width: 80px;
-    padding: 0.25rem 0.35rem;
-    font-size: 0.85rem;
-  }
-
-  .slider-nav {
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
-  }
-
-  .slider-nav-prev {
-    left: 0.5rem;
-  }
-
-  .slider-nav-next {
-    right: 0.5rem;
-  }
-}
-
-/* Средние телефоны (481px - 575px) - ИСПРАВЛЕНО */
-@media (min-width: 481px) and (max-width: 575px) {
-  .nutrition-slider-container {
-    padding: 0.5rem 0;
-  }
-
-  .nutrition-slider {
-    gap: 1rem;
-    padding: 0 2rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 260px;
-  }
-
-  .nutrition-card {
-    min-width: 240px;
-    max-width: 260px;
-  }
-
-  .card-body {
-    min-width: 240px;
-    max-width: 100%;
-    padding: 0.75rem !important;
-  }
-
-  .meal-row {
-    flex-wrap: nowrap;
-  }
-
-  .meal-label {
-    flex: 0 0 65px;
-    font-size: 0.83rem;
-    margin-right: 0.4rem;
-  }
-
-  .meal-content {
-    flex: 1;
-    margin-right: 0.4rem;
-    font-size: 0.83rem;
-    min-width: 90px;
-  }
-
-  .meal-checkbox {
-    margin-right: 0.4rem;
-  }
-
-  .meal-checkbox .form-check-input {
-    width: 1.1em;
-    height: 1.1em;
-  }
-
-  .meal-time {
-    flex: 0 0 75px;
-  }
-
-  .meal-time input {
-    min-width: 75px;
-    padding: 0.2rem 0.3rem;
-    font-size: 0.83rem;
-  }
-
-  .slider-nav {
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
-  }
-
-  .slider-nav-prev {
-    left: 0.25rem;
-  }
-
-  .slider-nav-next {
-    right: 0.25rem;
-  }
-}
-
-/* Маленькие телефоны (до 480px) */
-@media (max-width: 480px) {
-  .nutrition-slider {
-    gap: 0.75rem;
-    padding: 0 1.5rem;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 calc(100vw - 3rem);
-  }
-
-  .nutrition-card {
-    min-width: 220px;
-  }
-
-  .card-body {
-    min-width: 220px;
-    padding: 0.6rem !important;
-  }
-
-  .meal-row {
-    flex-wrap: wrap;
-    margin-bottom: 0.4rem;
-  }
-
-  .meal-label {
-    flex: 0 0 100%;
-    font-size: 0.8rem;
-    margin-bottom: 0.2rem;
-  }
-
-  .meal-content {
-    flex: 1;
-    font-size: 0.8rem;
-    min-width: 80px;
-    margin-right: 0.3rem;
-  }
-
-  .meal-checkbox {
-    margin-right: 0.3rem;
-  }
-
-  .meal-checkbox .form-check-input {
-    width: 1em;
-    height: 1em;
-  }
-
-  .meal-time {
-    flex: 0 0 70px;
-  }
-
-  .meal-time input {
-    min-width: 70px;
-    padding: 0.15rem 0.25rem;
-    font-size: 0.8rem;
-  }
-
-  .slider-nav {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-  }
-
-  .slider-nav-prev {
-    left: 0.15rem;
-  }
-
-  .slider-nav-next {
-    right: 0.15rem;
-  }
-}
-
-/* Ландшафтная ориентация на мобильных */
-@media (max-height: 500px) and (orientation: landscape) {
-  .nutrition-slider-container {
-    padding: 0.5rem 0;
-  }
-
-  .nutrition-slide {
-    flex: 0 0 240px;
-  }
-
-  .nutrition-card {
-    min-width: 200px;
-  }
-
-  .card-body {
-    padding: 0.5rem !important;
-    min-height: auto;
-  }
-
-  .meal-row {
-    margin-bottom: 0.3rem;
-    min-height: 24px;
-  }
-
-  .meal-label {
-    flex: 0 0 60px;
-    font-size: 0.75rem;
-  }
-
-  .meal-content {
-    font-size: 0.75rem;
-  }
-
-  .meal-time {
-    flex: 0 0 60px;
-  }
-
-  .meal-time input {
-    min-width: 60px;
-    padding: 0.1rem 0.2rem;
-    font-size: 0.75rem;
-  }
-}
-
-/* Стили для темной темы */
-@media (prefers-color-scheme: dark) {
-  .nutrition-slide.active {
-    box-shadow: 0 8px 32px rgba(0,123,255,0.15);
-  }
-
-  .slider-nav {
-    background: #5a8f7b;
-  }
-
-  .slider-nav:hover:not(:disabled) {
-    background: #4a7f6b;
-  }
-
-  .meal-label {
-    color: #ddd;
-  }
-}
-
-/* Отключаем анимации для пользователей, которые их предпочитают не использовать */
-@media (prefers-reduced-motion: reduce) {
-  .nutrition-slider,
-  .nutrition-slide,
-  .slider-nav {
-    transition: none !important;
-  }
-}
-
-/* Улучшаем доступность для фокуса */
-.slider-nav:focus {
-  outline: 3px solid #6a9c89;
-  outline-offset: 2px;
+.day-header.has-plan {
+  background: rgba(106, 156, 137, 0.1);
+  font-weight: 600;
 }
 </style>
 
@@ -671,357 +61,183 @@
 
 <div class="alert alert-success">
   <strong>Активная программа:</strong> {{ program.name }}<br>
-  <strong>Цель:</strong> {{ program.target_calories }} ккал / день
+  <strong>Период:</strong> {{ program.start_date|date:"d.m.Y" }} – {{ program.end_date|date:"d.m.Y" }}
 </div>
 
-<!-- Слайдер плана питания -->
-<div class="nutrition-slider-container mb-4">
-  <div class="nutrition-slider">
-    {% for plan, form in plans_forms %}
-      <div class="nutrition-slide">
-        <div class="card nutrition-card">
-          <div class="card-header">{{ plan.date|date:"d E" }}</div>
-          <div class="card-body">
+<!-- Фильтр по месяцам -->
+<div class="mb-4">
+  <label for="monthFilter" class="form-label">Выберите месяц</label>
+  <select id="monthFilter" class="form-select">
+    {% for option in month_options %}
+      <option value="{{ option.value }}" {% if option.year == selected_year and option.month == selected_month %}selected{% endif %}>
+        {{ option.month_name|title }} {{ option.year }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
 
+<!-- Список дней -->
+<div id="daysContainer">
+  {% for date in current_month_dates %}
+    <div class="card mb-2">
+      <div class="day-header {% if date in existing_plans %}has-plan{% endif %}" data-date="{{ date|date:'Y-m-d' }}">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>{{ date|date:"l, d E" }}</span>
+          {% if date in existing_plans %}
+            <i class="bi bi-chevron-down"></i>
+          {% endif %}
+        </div>
+      </div>
+      {% if date in existing_plans %}
+        <div class="meal-card" id="meal-{{ date|date:'Y-m-d' }}">
+          {% with plan=existing_plans|get_item:date %}
             <!-- Завтрак -->
-            <div class="meal-row">
-              <span class="meal-label">Завтрак:</span>
-              <span class="meal-content">{{ plan.breakfast|default:"— Не задан" }}</span>
-              <div class="meal-checkbox">
-                <input type="checkbox"
-                       name="{{ form.breakfast_done.name }}"
-                       id="{{ form.breakfast_done.id_for_label }}"
-                       {% if form.breakfast_done.value %}checked{% endif %}
-                       data-plan-id="{{ plan.id }}"
-                       data-field="breakfast_done"
-                       class="form-check-input">
+            <div class="meal-item d-flex align-items-center mb-2">
+              <div class="form-check me-3">
+                <input class="form-check-input meal-checkbox" type="checkbox"
+                       data-plan-id="{{ plan.id }}" data-field="breakfast_done"
+                       {% if plan.breakfast_done %}checked{% endif %}>
               </div>
-              <div class="meal-time">
-                {% if form.breakfast_done.value %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.breakfast_time.name }}"
-                         value="{{ form.breakfast_time.value|default:'' }}"
-                         data-field="breakfast_time"
-                         data-plan-id="{{ plan.id }}">
-                {% else %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.breakfast_time.name }}"
-                         value="{{ form.breakfast_time.value|default:'' }}"
-                         data-field="breakfast_time"
-                         data-plan-id="{{ plan.id }}"
-                         disabled>
-                {% endif %}
-              </div>
+              <span class="meal-label flex-shrink-0 me-2">Завтрак:</span>
+              <span class="meal-content flex-grow-1">{{ plan.breakfast|default:"— Не задан" }}</span>
+              <input type="time" class="form-control form-control-sm ms-2 meal-time"
+                     style="width: 110px; {% if not plan.breakfast_done %}display:none;{% endif %}"
+                     data-plan-id="{{ plan.id }}" data-field="breakfast_time"
+                     value="{{ plan.breakfast_time|time:"H:i" }}">
             </div>
 
             <!-- Обед -->
-            <div class="meal-row">
-              <span class="meal-label">Обед:</span>
-              <span class="meal-content">{{ plan.lunch|default:"— Не задан" }}</span>
-              <div class="meal-checkbox">
-                <input type="checkbox"
-                       name="{{ form.lunch_done.name }}"
-                       id="{{ form.lunch_done.id_for_label }}"
-                       {% if form.lunch_done.value %}checked{% endif %}
-                       data-plan-id="{{ plan.id }}"
-                       data-field="lunch_done"
-                       class="form-check-input">
+            <div class="meal-item d-flex align-items-center mb-2">
+              <div class="form-check me-3">
+                <input class="form-check-input meal-checkbox" type="checkbox"
+                       data-plan-id="{{ plan.id }}" data-field="lunch_done"
+                       {% if plan.lunch_done %}checked{% endif %}>
               </div>
-              <div class="meal-time">
-                {% if form.lunch_done.value %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.lunch_time.name }}"
-                         value="{{ form.lunch_time.value|default:'' }}"
-                         data-field="lunch_time"
-                         data-plan-id="{{ plan.id }}">
-                {% else %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.lunch_time.name }}"
-                         value="{{ form.lunch_time.value|default:'' }}"
-                         data-field="lunch_time"
-                         data-plan-id="{{ plan.id }}"
-                         disabled>
-                {% endif %}
-              </div>
+              <span class="meal-label flex-shrink-0 me-2">Обед:</span>
+              <span class="meal-content flex-grow-1">{{ plan.lunch|default:"— Не задан" }}</span>
+              <input type="time" class="form-control form-control-sm ms-2 meal-time"
+                     style="width: 110px; {% if not plan.lunch_done %}display:none;{% endif %}"
+                     data-plan-id="{{ plan.id }}" data-field="lunch_time"
+                     value="{{ plan.lunch_time|time:"H:i" }}">
             </div>
 
             <!-- Ужин -->
-            <div class="meal-row">
-              <span class="meal-label">Ужин:</span>
-              <span class="meal-content">{{ plan.dinner|default:"— Не задан" }}</span>
-              <div class="meal-checkbox">
-                <input type="checkbox"
-                       name="{{ form.dinner_done.name }}"
-                       id="{{ form.dinner_done.id_for_label }}"
-                       {% if form.dinner_done.value %}checked{% endif %}
-                       data-plan-id="{{ plan.id }}"
-                       data-field="dinner_done"
-                       class="form-check-input">
+            <div class="meal-item d-flex align-items-center mb-2">
+              <div class="form-check me-3">
+                <input class="form-check-input meal-checkbox" type="checkbox"
+                       data-plan-id="{{ plan.id }}" data-field="dinner_done"
+                       {% if plan.dinner_done %}checked{% endif %}>
               </div>
-              <div class="meal-time">
-                {% if form.dinner_done.value %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.dinner_time.name }}"
-                         value="{{ form.dinner_time.value|default:'' }}"
-                         data-field="dinner_time"
-                         data-plan-id="{{ plan.id }}">
-                {% else %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.dinner_time.name }}"
-                         value="{{ form.dinner_time.value|default:'' }}"
-                         data-field="dinner_time"
-                         data-plan-id="{{ plan.id }}"
-                         disabled>
-                {% endif %}
-              </div>
+              <span class="meal-label flex-shrink-0 me-2">Ужин:</span>
+              <span class="meal-content flex-grow-1">{{ plan.dinner|default:"— Не задан" }}</span>
+              <input type="time" class="form-control form-control-sm ms-2 meal-time"
+                     style="width: 110px; {% if not plan.dinner_done %}display:none;{% endif %}"
+                     data-plan-id="{{ plan.id }}" data-field="dinner_time"
+                     value="{{ plan.dinner_time|time:"H:i" }}">
             </div>
 
             <!-- Перекусы -->
-            <div class="meal-row">
-              <span class="meal-label">Перекусы:</span>
-              <span class="meal-content">{{ plan.snacks|default:"— Не задан" }}</span>
-              <div class="meal-checkbox">
-                <input type="checkbox"
-                       name="{{ form.snacks_done.name }}"
-                       id="{{ form.snacks_done.id_for_label }}"
-                       {% if form.snacks_done.value %}checked{% endif %}
-                       data-plan-id="{{ plan.id }}"
-                       data-field="snacks_done"
-                       class="form-check-input">
+            <div class="meal-item d-flex align-items-center">
+              <div class="form-check me-3">
+                <input class="form-check-input meal-checkbox" type="checkbox"
+                       data-plan-id="{{ plan.id }}" data-field="snacks_done"
+                       {% if plan.snacks_done %}checked{% endif %}>
               </div>
-              <div class="meal-time">
-                {% if form.snacks_done.value %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.snacks_time.name }}"
-                         value="{{ form.snacks_time.value|default:'' }}"
-                         data-field="snacks_time"
-                         data-plan-id="{{ plan.id }}">
-                {% else %}
-                  <input type="time" class="form-control form-control-sm"
-                         name="{{ form.snacks_time.name }}"
-                         value="{{ form.snacks_time.value|default:'' }}"
-                         data-field="snacks_time"
-                         data-plan-id="{{ plan.id }}"
-                         disabled>
-                {% endif %}
-              </div>
+              <span class="meal-label flex-shrink-0 me-2">Перекусы:</span>
+              <span class="meal-content flex-grow-1">{{ plan.snacks|default:"— Не задан" }}</span>
+              <input type="time" class="form-control form-control-sm ms-2 meal-time"
+                     style="width: 110px; {% if not plan.snacks_done %}display:none;{% endif %}"
+                     data-plan-id="{{ plan.id }}" data-field="snacks_time"
+                     value="{{ plan.snacks_time|time:"H:i" }}">
             </div>
-
-          </div>
+          {% endwith %}
         </div>
-      </div>
-    {% empty %}
-      <div class="col-12">
-        <p class="text-muted">Нет планов на ближайшие дни.</p>
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Кнопки навигации -->
-  <button class="slider-nav slider-nav-prev" aria-label="Предыдущий день">‹</button>
-  <button class="slider-nav slider-nav-next" aria-label="Следующий день">›</button>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p class="text-muted">Нет дней в этом месяце.</p>
+  {% endfor %}
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const container = document.querySelector('.nutrition-slider-container');
-  const slider = document.querySelector('.nutrition-slider');
-  const slides = document.querySelectorAll('.nutrition-slide');
-  const prevBtn = document.querySelector('.slider-nav-prev');
-  const nextBtn = document.querySelector('.slider-nav-next');
+// Фильтрация по месяцам
+document.getElementById('monthFilter').addEventListener('change', function() {
+  const [year, month] = this.value.split('-');
+  window.location.href = `?year=${year}&month=${month}`;
+});
 
-  if (!slider || slides.length === 0) return;
-
-  let currentIndex = 0;
-  const maxIndex = slides.length - 1;
-
-  // Функция для получения ширины слайда
-  function getSlideWidth() {
-    if (slides.length === 0) return 0;
-    const slide = slides[0];
-    return slide.offsetWidth;
-  }
-
-  // Функция для получения gap между слайдами
-  function getSlideGap() {
-    const style = window.getComputedStyle(slider);
-    return parseFloat(style.gap) || 0;
-  }
-
-  function updateSlider() {
-    const slideWidth = getSlideWidth();
-    const gap = getSlideGap();
-    const totalWidth = slideWidth + gap;
-    const translateX = -currentIndex * totalWidth;
-    slider.style.transform = `translateX(${translateX}px)`;
-
-    // Обновляем состояние кнопок
-    if (prevBtn) {
-      prevBtn.disabled = currentIndex === 0;
-      prevBtn.classList.toggle('opacity-low', currentIndex === 0);
-    }
-
-    if (nextBtn) {
-      nextBtn.disabled = currentIndex === maxIndex;
-      nextBtn.classList.toggle('opacity-low', currentIndex === maxIndex);
-    }
-  }
-
-  function updateActiveSlides() {
-    slides.forEach((slide, index) => {
-      slide.classList.remove('active');
-      if (index === currentIndex) {
-        slide.classList.add('active');
+// Раскрытие карточек
+document.querySelectorAll('.day-header').forEach(header => {
+  header.addEventListener('click', function() {
+    const date = this.dataset.date;
+    const card = document.getElementById(`meal-${date}`);
+    if (card) {
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+      const icon = this.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('bi-chevron-down');
+        icon.classList.toggle('bi-chevron-up');
       }
+    }
+  });
+});
+
+  // Обработка чекбоксов
+document.querySelectorAll('.meal-checkbox').forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    const planId = this.dataset.planId;
+    const field = this.dataset.field;
+    const isChecked = this.checked;
+
+    // Показываем/скрываем время
+    const timeInput = this.closest('.meal-item').querySelector('.meal-time');
+    timeInput.style.display = isChecked ? 'block' : 'none';
+    if (!isChecked) {
+      timeInput.value = '';
+    }
+
+    // Отправляем AJAX
+    fetch('{% url "programs:update_meal_plan" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: new URLSearchParams({
+        plan_id: planId,
+        field: field,
+        value: isChecked
+      })
     });
-  }
-
-  // Навигация кнопками
-  prevBtn?.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      updateSlider();
-      updateActiveSlides();
-    }
   });
+});
 
-  nextBtn?.addEventListener('click', () => {
-    if (currentIndex < maxIndex) {
-      currentIndex++;
-      updateSlider();
-      updateActiveSlides();
-    }
-  });
+// Обработка времени
+document.querySelectorAll('.meal-time').forEach(input => {
+  input.addEventListener('change', function() {
+    const planId = this.dataset.planId;
+    const field = this.dataset.field;
+    const value = this.value || '';
 
-  // Колесико мыши
-  let scrollTimeout;
-  container.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    clearTimeout(scrollTimeout);
-    const direction = e.deltaY > 0 ? 1 : -1;
-    if (direction > 0 && currentIndex < maxIndex) {
-      currentIndex++;
-    } else if (direction < 0 && currentIndex > 0) {
-      currentIndex--;
-    }
-    updateSlider();
-    updateActiveSlides();
-    scrollTimeout = setTimeout(() => {}, 150);
-  }, { passive: false });
-
-  // Drag & Touch
-  let isDragging = false;
-  let startX = 0;
-  let startTranslate = 0;
-  let currentTranslate = 0;
-
-  function startDrag(e) {
-    isDragging = true;
-    startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-    const slideWidth = getSlideWidth();
-    const gap = getSlideGap();
-    const totalWidth = slideWidth + gap;
-    startTranslate = -currentIndex * totalWidth;
-    slider.style.transition = 'none';
-  }
-
-  function drag(e) {
-    if (!isDragging) return;
-
-    const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-    const diff = currentX - startX;
-    currentTranslate = startTranslate + diff;
-
-    slider.style.transform = `translateX(${currentTranslate}px)`;
-  }
-
-  function endDrag() {
-    if (!isDragging) return;
-    isDragging = false;
-
-    const slideWidth = getSlideWidth();
-    const gap = getSlideGap();
-    const totalWidth = slideWidth + gap;
-    const movedBy = currentTranslate + (currentIndex * totalWidth);
-
-    // Порог переключения - 30% ширины слайда
-    if (Math.abs(movedBy) > slideWidth * 0.3) {
-      if (movedBy > 0 && currentIndex > 0) {
-        currentIndex--;
-      } else if (movedBy < 0 && currentIndex < maxIndex) {
-        currentIndex++;
-      }
-    }
-
-    slider.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    updateSlider();
-    updateActiveSlides();
-  }
-
-  // Мышь
-  container.addEventListener('mousedown', startDrag);
-  container.addEventListener('mousemove', drag);
-  container.addEventListener('mouseup', endDrag);
-  container.addEventListener('mouseleave', endDrag);
-
-  // Touch
-  container.addEventListener('touchstart', startDrag);
-  container.addEventListener('touchmove', drag);
-  container.addEventListener('touchend', endDrag);
-  container.addEventListener('touchcancel', endDrag);
-
-  // Ресайз окна
-  let resizeTimeout;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-      updateSlider();
-    }, 250);
-  });
-
-  // Инициализация
-  updateSlider();
-  updateActiveSlides();
-
-  // 🔥 AJAX для чекбоксов и времени
-  $(document).ready(function() {
-    $('.form-check-input, .form-control[type="time"]').on('change', function() {
-      var $this = $(this);
-      var planId = $this.data('plan-id');
-      var fieldName = $this.data('field');
-      var value = $this.is(':checkbox') ? $this.prop('checked') : $this.val();
-
-      $.ajax({
-        url: '{% url "programs:update_meal_plan" %}',
-        method: 'POST',
-        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-        data: {
-          plan_id: planId,
-          field: fieldName,
-          value: value,
-          csrfmiddlewaretoken: '{{ csrf_token }}'
-        },
-        success: function(response) {
-          console.log("Сохранено:", response);
-          if ($this.is(':checkbox')) {
-            var timeField = $this.closest('.meal-row').find('input[type="time"]');
-            if (value) {
-              timeField.removeAttr('disabled');
-            } else {
-              timeField.attr('disabled', true).val('');
-            }
-          }
-        },
-        error: function() {
-          alert("Ошибка сохранения");
-        }
-      });
+    fetch('{% url "programs:update_meal_plan" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      },
+      body: new URLSearchParams({
+        plan_id: planId,
+        field: field,
+        value: value
+      })
     });
   });
 });
 </script>
 
+<!-- Кастомный фильтр для получения элемента из словаря -->
+<!--{% comment %}-->
+<!--  В Django нет встроенного способа получить значение из словаря по ключу в шаблоне.-->
+<!--  Создадим простой фильтр.-->
+<!--{% endcomment %}-->
 {% endblock %}

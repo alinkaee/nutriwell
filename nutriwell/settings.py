@@ -137,3 +137,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'awwwf455greed@mail.ru'
 EMAIL_HOST_PASSWORD = 'Js8IMRZgztfJbHne64eK'
 DEFAULT_FROM_EMAIL = 'NutriWell <awwwf455greed@mail.ru>'
+
+LANGUAGE_CODE = 'ru'
+USE_I18N = True
+USE_L10N = True
