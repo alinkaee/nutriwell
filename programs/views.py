@@ -302,6 +302,24 @@ def view_client_nutrition_plan(request, client_id):
     for entry in diary_entries:
         diary_by_date[entry.date].append(entry)
 
+    diary_with_nutrition = {}
+    for date, entries in diary_by_date.items():
+        enriched_entries = []
+        for entry in entries:
+            enriched_products = []
+            for dp in entry.products.all():
+                nutrition = dp.product.get_nutrition_for_quantity(float(dp.quantity))
+                enriched_products.append({
+                    'product_name': dp.product.name,
+                    'quantity': dp.quantity,
+                    'nutrition': nutrition
+                })
+            enriched_entries.append({
+                'entry': entry,
+                'products': enriched_products
+            })
+        diary_with_nutrition[date] = enriched_entries
+
     context = {
         'program': program,
         'client': client_profile,
@@ -309,7 +327,8 @@ def view_client_nutrition_plan(request, client_id):
         'selected_year': selected_year,
         'selected_month': selected_month,
         'current_month_dates': current_month_dates,
-        'diary_by_date': dict(diary_by_date),
         'existing_plans': existing_plans,
+        'diary_by_date': dict(diary_by_date),
+        'diary_with_nutrition': diary_with_nutrition,
     }
     return render(request, 'programs/view_client_nutrition_plan.html', context)

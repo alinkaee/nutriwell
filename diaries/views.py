@@ -6,8 +6,8 @@ from django.contrib import messages
 from django.utils import timezone
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from .models import FoodDiaryEntry, ProgressRecord
-from .forms import FoodDiaryForm, ProgressRecordForm
+from .models import FoodDiaryEntry, ProgressRecord, DiaryProduct
+from .forms import FoodDiaryForm, ProgressRecordForm, DiaryProductForm
 from clients.models import ClientProfile
 from programs.models import NutritionProgram
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -25,6 +25,8 @@ import matplotlib
 matplotlib.use('Agg')
 from io import BytesIO
 from reportlab.platypus import Image
+from django.forms import modelformset_factory
+
 
 
 font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSans.ttf')
@@ -77,25 +79,65 @@ def view_client_diary(request, client_id):
         'program': program,
     })
 
+# diaries/views.py
+
 @login_required
 def add_diary_entry(request):
     if request.user.role != 'client':
         messages.error(request, "Только клиенты могут добавлять записи.")
         return redirect('accounts:dashboard')
 
+    DiaryProductFormSet = modelformset_factory(
+        DiaryProduct,
+        form=DiaryProductForm,
+        extra=1,
+        can_delete=True
+    )
+
     if request.method == 'POST':
         form = FoodDiaryForm(request.POST)
-        if form.is_valid():
+        formset = DiaryProductFormSet(request.POST)
+
+        if form.is_valid() and formset.is_valid():
             entry = form.save(commit=False)
             entry.client = request.user.client_profile
             entry.save()
+
+            # Сохраняем продукты
+            for product_form in formset:
+                if product_form.cleaned_data and not product_form.cleaned_data.get('DELETE'):
+                    diary_product = product_form.save(commit=False)
+                    diary_product.entry = entry
+                    diary_product.save()
+
+            # Автоматический расчёт БЖУ
+            if not entry.manual_input:
+                total_cal = total_prot = total_fat = total_carb = 0.0
+                for dp in entry.products.all():
+                    prod = dp.product
+                    qty = float(dp.quantity)
+                    factor = qty / 100.0
+
+                    total_cal += (float(prod.calories_per_100g or 0)) * factor
+                    total_prot += (float(prod.protein_per_100g or 0)) * factor
+                    total_fat += (float(prod.fat_per_100g or 0)) * factor
+                    total_carb += (float(prod.carbs_per_100g or 0)) * factor
+
+                entry.calories_per_100g = round(total_cal)
+                entry.protein_per_100g = round(total_prot, 1)
+                entry.fat_per_100g = round(total_fat, 1)
+                entry.carbs_per_100g = round(total_carb, 1)
+                entry.save()
+
             messages.success(request, 'Запись успешно добавлена!')
             return redirect('diaries:view_diary')
     else:
         form = FoodDiaryForm(initial={'date': timezone.now().date()})
+        formset = DiaryProductFormSet(queryset=DiaryProduct.objects.none())
 
     return render(request, 'clients/add_diary_entry.html', {
         'form': form,
+        'formset': formset,
     })
 
 @login_required

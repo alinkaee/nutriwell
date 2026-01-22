@@ -30,19 +30,43 @@
         <small class="text-muted">Если вы не нашли продукт в списке — включите эту опцию.</small>
       </div>
 
-      <div class="mb-3" id="product-field">
-        {{ form.product.label_tag }}
-        {{ form.product }}
+      <!-- ПРОДУКТЫ -->
+      <div id="products-section" style="{% if form.manual_input.value %}display:none;{% endif %}">
+        <h5>Продукты</h5>
+        {{ formset.management_form }}
+        {% for product_form in formset %}
+          <div class="product-row mb-2 p-2 border rounded">
+            {{ product_form.id }}
+            <div class="row">
+              <div class="col-md-8">
+                {{ product_form.product.label_tag }}
+                {{ product_form.product }}
+              </div>
+              <div class="col-md-3">
+                {{ product_form.quantity.label_tag }}
+                {{ product_form.quantity }}
+              </div>
+              <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-product">✕</button>
+              </div>
+            </div>
+            {% if product_form.non_field_errors %}
+              <div class="text-danger">{{ product_form.non_field_errors }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="add-product">+ Добавить продукт</button>
       </div>
 
-      <div class="mb-3" id="description-field">
+      <!-- Описание (для ручного ввода) -->
+      <div class="mb-3" id="description-field" style="{% if not form.manual_input.value %}display:none;{% endif %}">
         {{ form.food_description.label_tag }}
         {{ form.food_description }}
       </div>
 
       <hr>
 
-      <h5>Питательная ценность (если известна)</h5>
+      <h5>Питательная ценность</h5>
       <div class="row">
         <div class="col-md-3 mb-3">
           {{ form.calories.label_tag }}
@@ -73,62 +97,162 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const manualInput = document.getElementById('{{ form.manual_input.id_for_label }}');
-  const productSelect = document.getElementById('{{ form.product.id_for_label }}');
+  const productsSection = document.getElementById('products-section');
   const descriptionField = document.getElementById('description-field');
 
-  const caloriesInput = document.querySelector('[name="calories"]');
-  const proteinInput = document.querySelector('[name="protein"]');
-  const fatInput = document.querySelector('[name="fat"]');
-  const carbsInput = document.querySelector('[name="carbs"]');
-
-  // Переключение между продуктом и ручным вводом
+  // Переключение между ручным вводом и продуктами
   function toggleFields() {
     if (manualInput.checked) {
-      productSelect.disabled = true;
+      productsSection.style.display = 'none';
       descriptionField.style.display = 'block';
-      // Очистка полей
-      caloriesInput.value = '';
-      proteinInput.value = '';
-      fatInput.value = '';
-      carbsInput.value = '';
     } else {
-      productSelect.disabled = false;
+      productsSection.style.display = 'block';
       descriptionField.style.display = 'none';
     }
   }
 
   manualInput.addEventListener('change', toggleFields);
-  toggleFields(); // Инициализация
 
-  // Автозаполнение при выборе продукта
-  productSelect.addEventListener('change', function() {
-    const productId = this.value;
-    if (!productId) {
-      caloriesInput.value = '';
-      proteinInput.value = '';
-      fatInput.value = '';
-      carbsInput.value = '';
-      return;
-    }
+  // Кнопка "Добавить продукт"
+  // Кнопка "Добавить продукт"
+document.getElementById('add-product').addEventListener('click', function() {
+  const container = document.querySelector('#products-section .product-row').parentNode;
+  const rows = Array.from(container.querySelectorAll('.product-row'));
+  const lastRow = rows[rows.length - 1];
+  const newRow = lastRow.cloneNode(true);
 
-    fetch(`/products/api/product/${productId}/nutrition/`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          alert('Ошибка загрузки данных о продукте');
-          return;
-        }
-        caloriesInput.value = data.calories || '';
-        proteinInput.value = data.protein || '';
-        fatInput.value = data.fat || '';
-        carbsInput.value = data.carbs || '';
-      })
-      .catch(err => {
-        console.error('Ошибка:', err);
-        alert('Не удалось загрузить данные о продукте');
-      });
+  // Очистка значений
+  const inputs = newRow.querySelectorAll('input, select');
+  inputs.forEach(input => {
+    if (input.type !== 'hidden') input.value = '';
   });
+
+  // Обновляем имена полей
+  const prefix = '{{ formset.prefix }}';
+  const nextIndex = rows.length;
+  const idRegex = new RegExp(`${prefix}-\\d+-`, 'g');
+  const nameRegex = new RegExp(`${prefix}\\d+`, 'g');
+
+  newRow.innerHTML = newRow.innerHTML
+    .replace(idRegex, `${prefix}-${nextIndex}-`)
+    .replace(nameRegex, `${prefix}-${nextIndex}`);
+
+  // Убираем значение ID (оно должно быть пустым для нового объекта)
+  const idInput = newRow.querySelector(`[name="${prefix}-${nextIndex}-id"]`);
+  if (idInput) idInput.value = '';
+
+  container.appendChild(newRow);
+
+  // Обновляем TOTAL_FORMS
+  const totalForms = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+  if (totalForms) {
+    totalForms.value = parseInt(totalForms.value) + 1;
+  }
+});
+
+  // Удаление строки
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-product')) {
+      e.target.closest('.product-row').remove();
+    }
+  });
+
+  // Автозаполнение БЖУ при выборе продукта
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+      const productId = e.target.value;
+      const row = e.target.closest('.product-row');
+      const quantityInput = row.querySelector('.quantity-input');
+
+      if (!productId || !quantityInput) return;
+
+      fetch(`/products/api/product/${productId}/nutrition/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert('Ошибка загрузки данных о продукте');
+            return;
+          }
+
+          const factor = parseFloat(quantityInput.value) / 100.0;
+
+          // Обновляем поля БЖУ в этой строке (если нужно)
+          // Но мы будем считать общее количество при сохранении
+
+          // Обновляем все БЖУ в форме
+          updateTotalNutrition();
+        })
+        .catch(err => {
+          console.error('Ошибка:', err);
+          alert('Не удалось загрузить данные о продукте');
+        });
+    }
+  });
+
+  // Функция пересчёта БЖУ
+  function updateTotalNutrition() {
+    if (manualInput.checked) return;
+
+    let total_cal = 0, total_prot = 0, total_fat = 0, total_carb = 0;
+
+    document.querySelectorAll('.product-row').forEach(row => {
+      const productSelect = row.querySelector('.product-select');
+      const quantityInput = row.querySelector('.quantity-input');
+      const productId = productSelect.value;
+      const quantity = parseFloat(quantityInput.value) || 0;
+
+      if (!productId || quantity <= 0) return;
+
+      // Получаем данные о продукте из атрибутов (можно кэшировать)
+      const productData = getProductData(productId);
+      if (!productData) return;
+
+      const factor = quantity / 100.0;
+      total_cal += (productData.calories || 0) * factor;
+      total_prot += (productData.protein || 0) * factor;
+      total_fat += (productData.fat || 0) * factor;
+      total_carb += (productData.carbs || 0) * factor;
+    });
+
+    // Устанавливаем значения в главные поля
+    document.querySelector('[name="calories"]').value = Math.round(total_cal);
+    document.querySelector('[name="protein"]').value = parseFloat(total_prot).toFixed(1);
+    document.querySelector('[name="fat"]').value = parseFloat(total_fat).toFixed(1);
+    document.querySelector('[name="carbs"]').value = parseFloat(total_carb).toFixed(1);
+  }
+
+  // Функция получения данных о продукте (кэшируем)
+  const productCache = {};
+  function getProductData(productId) {
+    if (productCache[productId]) return productCache[productId];
+
+    // Можно сделать AJAX-запрос, но проще — хранить данные в HTML
+    // Для примера — пока заглушка
+    return { calories: 0, protein: 0, fat: 0, carbs: 0 };
+  }
+
+  // При изменении количества — пересчёт
+  document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('quantity-input')) {
+      updateTotalNutrition();
+    }
+  });
+
+  // Инициализация
+  toggleFields();
+  updateTotalNutrition();
+});
+
+  row.querySelector('.product-select').addEventListener('change', function() {
+  const productId = this.value;
+  if (!productId) return;
+
+  fetch(`/products/api/product/${productId}/nutrition/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) return;
+      // Заполняем поля в строке (если нужно)
+    });
 });
 </script>
-
 {% endblock %}

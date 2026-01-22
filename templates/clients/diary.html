@@ -219,8 +219,13 @@
         <span>{{ entry.date|date:"d E Y" }} {% if entry.time %}{{ entry.time|time:"H:i" }}{% endif %}</span>
       </div>
       <div class="card-body">
-        {% if entry.product %}
-          <p><strong>Продукт:</strong> {{ entry.product.name }}</p>
+        {% if entry.products.exists %}
+          <p><strong>Продукты:</strong></p>
+          <ul>
+            {% for dp in entry.products.all %}
+              <li>{{ dp.product.name }} × {{ dp.quantity }} {% if dp.product.unit %}{{ dp.product.unit }}{% endif %}</li>
+            {% endfor %}
+          </ul>
         {% elif entry.food_description %}
           <p><strong>Описание:</strong> {{ entry.food_description }}</p>
         {% endif %}
