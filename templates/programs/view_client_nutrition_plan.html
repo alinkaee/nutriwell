@@ -1,99 +1,63 @@
 {% extends 'accounts/base_dashboard.html' %}
+{% load static %}
+{% load dict_extras %}
 
 {% block title %}План питания клиента — Чистый Баланс{% endblock %}
 
 {% block content %}
 <style>
-/* Основные стили слайдера */
-.nutrition-slider-container {
-  position: relative;
-  overflow: hidden;
-  padding: 1rem 0;
-  cursor: grab;
+.meal-card {
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  background: #f8f9fa;
 }
-
-.nutrition-slider-container:active {
-  cursor: grabbing;
-}
-
-.nutrition-slider {
+.meal-item {
   display: flex;
-  gap: 1.5rem;
-  padding: 0 2.5rem;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  width: max-content;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
 }
-
-.nutrition-slide {
-  flex: 0 0 360px;
-  opacity: 0.4;
-  transform: scale(0.95);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+.meal-item:last-child {
+  border-bottom: none;
 }
-
-.nutrition-slide.active {
-  opacity: 1;
-  transform: scale(1);
-  box-shadow: 0 8px 32px rgba(0,123,255,0.25);
+.meal-label {
+  font-weight: 600;
+  color: var(--primary);
 }
-
-.slider-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--primary, #6a9c89);
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 1.3rem;
+.meal-content {
+  color: #555;
+}
+.meal-checkbox .form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+}
+.meal-time {
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  width: 110px;
+}
+.day-header {
   cursor: pointer;
-  z-index: 10;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.day-header:hover {
+  background: #f1f3f5;
+}
+.day-header.has-plan {
+  background: rgba(106, 156, 137, 0.1);
+  font-weight: 600;
+}
+.nutrition-values {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: all 0.2s ease;
-}
-
-.slider-nav:hover:not(:disabled) {
-  transform: translateY(-50%) scale(1.1);
-  background: #5a8f7b;
-}
-
-.slider-nav:disabled,
-.slider-nav.opacity-low {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.slider-nav-prev {
-  left: 1rem;
-}
-
-.slider-nav-next {
-  right: 1rem;
-}
-
-/* Мобильная адаптация */
-@media (max-width: 768px) {
-  .nutrition-slider {
-    padding: 0 2rem;
-    gap: 1rem;
-  }
-  .nutrition-slide {
-    flex: 0 0 260px;
-  }
-  .slider-nav {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .nutrition-slide {
-    flex: 0 0 calc(90vw - 2rem);
-  }
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
 }
 </style>
 
@@ -101,284 +65,170 @@
 
 <div class="alert alert-info">
   <strong>Клиент:</strong> {{ client.user.get_full_name|default:client.user.email }}<br>
-  <strong>Цель:</strong> {{ program.target_calories }} ккал / день
+  <strong>Программа:</strong> {{ program.name }}<br>
+  <strong>Период:</strong> {{ program.start_date|date:"d.m.Y" }} – {{ program.end_date|date:"d.m.Y" }}
 </div>
 
-<!-- Слайдер плана питания -->
-<div class="nutrition-slider-container mb-4">
-  <div class="nutrition-slider">
-    {% for plan in plans %}
-      <div class="nutrition-slide">
-        <div class="card" style="width: 360px;">
-          <div class="card-header">{{ plan.date|date:"d E" }}</div>
-          <div class="card-body">
+<!-- Фильтр по месяцам -->
+<div class="mb-4">
+  <label for="monthFilter" class="form-label">Выберите месяц</label>
+  <select id="monthFilter" class="form-select">
+    {% for option in month_options %}
+      <option value="{{ option.value }}" {% if option.year == selected_year and option.month == selected_month %}selected{% endif %}>
+        {{ option.month_name|title }} {{ option.year }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Список дней -->
+<div id="daysContainer">
+  {% for date in current_month_dates %}
+    <div class="card mb-2">
+      <div class="day-header {% if date in existing_plans %}has-plan{% endif %}" data-date="{{ date|date:'Y-m-d' }}">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>{{ date|date:"l, d E" }}</span>
+          {% if date in existing_plans %}
+            <i class="bi bi-chevron-down"></i>
+          {% endif %}
+        </div>
+      </div>
+      {% if date in existing_plans %}
+        <div class="meal-card" id="meal-{{ date|date:'Y-m-d' }}">
+          {% with plan=existing_plans|get_item:date %}
             <!-- Завтрак -->
-            <div class="mb-3">
-              <label class="form-label">Завтрак</label>
-              <p>{{ plan.breakfast|default:"— Не задан" }}</p>
-              <div class="d-flex align-items-center mt-2">
-                <div class="form-check me-2">
-                  <input type="checkbox"
-                         name="breakfast_done_{{ plan.id }}"
-                         id="breakfast_done_{{ plan.id }}"
-                         {% if plan.breakfast_done %}checked{% endif %}
-                         disabled
-                         class="form-check-input">
-                  <label class="form-check-label" for="breakfast_done_{{ plan.id }}">Выполнен</label>
-                </div>
-                {% if plan.breakfast_time %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    {{ plan.breakfast_time }}
-                  </span>
+            <div class="meal-item d-flex align-items-center mb-2">
+              <span class="meal-label flex-shrink-0 me-2">Завтрак:</span>
+              <span class="meal-content flex-grow-1">{{ plan.breakfast|default:"— Не задан" }}</span>
+              <span class="text-muted ms-2">
+                {% if plan.breakfast_done %}
+                  <i class="bi bi-check-circle-fill text-success"></i> {{ plan.breakfast_time|time:"H:i" }}
                 {% else %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    --:--
-                  </span>
+                  <i class="bi bi-x-circle text-secondary"></i> Не выполнен
                 {% endif %}
-              </div>
+              </span>
             </div>
 
             <!-- Обед -->
-            <div class="mb-3">
-              <label class="form-label">Обед</label>
-              <p>{{ plan.lunch|default:"— Не задан" }}</p>
-              <div class="d-flex align-items-center mt-2">
-                <div class="form-check me-2">
-                  <input type="checkbox"
-                         name="lunch_done_{{ plan.id }}"
-                         id="lunch_done_{{ plan.id }}"
-                         {% if plan.lunch_done %}checked{% endif %}
-                         disabled
-                         class="form-check-input">
-                  <label class="form-check-label" for="lunch_done_{{ plan.id }}">Выполнен</label>
-                </div>
-                {% if plan.lunch_time %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    {{ plan.lunch_time }}
-                  </span>
+            <div class="meal-item d-flex align-items-center mb-2">
+              <span class="meal-label flex-shrink-0 me-2">Обед:</span>
+              <span class="meal-content flex-grow-1">{{ plan.lunch|default:"— Не задан" }}</span>
+              <span class="text-muted ms-2">
+                {% if plan.lunch_done %}
+                  <i class="bi bi-check-circle-fill text-success"></i> {{ plan.lunch_time|time:"H:i" }}
                 {% else %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    --:--
-                  </span>
+                  <i class="bi bi-x-circle text-secondary"></i> Не выполнен
                 {% endif %}
-              </div>
+              </span>
             </div>
 
             <!-- Ужин -->
-            <div class="mb-3">
-              <label class="form-label">Ужин</label>
-              <p>{{ plan.dinner|default:"— Не задан" }}</p>
-              <div class="d-flex align-items-center mt-2">
-                <div class="form-check me-2">
-                  <input type="checkbox"
-                         name="dinner_done_{{ plan.id }}"
-                         id="dinner_done_{{ plan.id }}"
-                         {% if plan.dinner_done %}checked{% endif %}
-                         disabled
-                         class="form-check-input">
-                  <label class="form-check-label" for="dinner_done_{{ plan.id }}">Выполнен</label>
-                </div>
-                {% if plan.dinner_time %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    {{ plan.dinner_time }}
-                  </span>
+            <div class="meal-item d-flex align-items-center mb-2">
+              <span class="meal-label flex-shrink-0 me-2">Ужин:</span>
+              <span class="meal-content flex-grow-1">{{ plan.dinner|default:"— Не задан" }}</span>
+              <span class="text-muted ms-2">
+                {% if plan.dinner_done %}
+                  <i class="bi bi-check-circle-fill text-success"></i> {{ plan.dinner_time|time:"H:i" }}
                 {% else %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    --:--
-                  </span>
+                  <i class="bi bi-x-circle text-secondary"></i> Не выполнен
                 {% endif %}
-              </div>
+              </span>
             </div>
 
             <!-- Перекусы -->
-            <div class="mb-3">
-              <label class="form-label">Перекусы</label>
-              <p>{{ plan.snacks|default:"— Не задан" }}</p>
-              <div class="d-flex align-items-center mt-2">
-                <div class="form-check me-2">
-                  <input type="checkbox"
-                         name="snacks_done_{{ plan.id }}"
-                         id="snacks_done_{{ plan.id }}"
-                         {% if plan.snacks_done %}checked{% endif %}
-                         disabled
-                         class="form-check-input">
-                  <label class="form-check-label" for="snacks_done_{{ plan.id }}">Выполнены</label>
-                </div>
-                {% if plan.snacks_time %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    {{ plan.snacks_time }}
-                  </span>
+            <div class="meal-item d-flex align-items-center mb-3">
+              <span class="meal-label flex-shrink-0 me-2">Перекусы:</span>
+              <span class="meal-content flex-grow-1">{{ plan.snacks|default:"— Не задан" }}</span>
+              <span class="text-muted ms-2">
+                {% if plan.snacks_done %}
+                  <i class="bi bi-check-circle-fill text-success"></i> {{ plan.snacks_time|time:"H:i" }}
                 {% else %}
-                  <span class="form-control form-control-sm" style="width: 100px; background: #f8f9fa; border: 1px solid #dee2e6;">
-                    --:--
-                  </span>
+                  <i class="bi bi-x-circle text-secondary"></i> Не выполнены
                 {% endif %}
-              </div>
+              </span>
             </div>
 
-            <!-- Примечания -->
-            <div class="mb-3">
-              <label class="form-label">Примечания</label>
-              <p>{{ plan.notes|default:"—" }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    {% empty %}
-      <div class="col-12">
-        <p class="text-muted">Нет планов на ближайшие дни.</p>
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Кнопки навигации -->
-  <button class="slider-nav slider-nav-prev" aria-label="Предыдущий день">‹</button>
-  <button class="slider-nav slider-nav-next" aria-label="Следующий день">›</button>
-</div>
-
-
-{% if extra_diary_days %}
-  <h3 class="mt-5 mb-3"><i class="bi bi-journal-text me-2"></i>Самостоятельные записи</h3>
-  <div class="nutrition-slider-container mb-4">
-    <div class="nutrition-slider" id="diarySlider">
-      {% for day in extra_diary_days %}
-        <div class="nutrition-slide">
-          <div class="card" style="width: 360px;">
-            <div class="card-header">{{ day.date|date:"d E" }}</div>
-            <div class="card-body">
-              {% for entry in day.entries %}
-                <div class="mb-2 pb-2 border-bottom">
-                  <small class="text-muted">
-                    {% if entry.time %}
-                      {{ entry.time|time:"H:i" }}
+            <!-- === ЗАПИСИ ИЗ ДНЕВНИКА === -->
+            {% if diary_by_date|get_item:date %}
+              <div class="mt-3 pt-2 border-top">
+                <h6 class="text-muted mb-2">Фактическое питание:</h6>
+                {% for entry in diary_by_date|get_item:date %}
+                  <div class="mb-2 pb-2 border-bottom">
+                    <small class="text-muted">
+                      {% if entry.time %}
+                        {{ entry.time|time:"H:i" }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </small><br>
+                    {% if entry.product %}
+                      <strong>{{ entry.product.name }}</strong>
+                    {% elif entry.food_description %}
+                      {{ entry.food_description|truncatewords:8 }}
                     {% else %}
                       —
                     {% endif %}
-                  </small><br>
-                  {% if entry.product %}
-                    <strong>{{ entry.product.name }}</strong>
-                  {% elif entry.food_description %}
-                    {{ entry.food_description|truncatewords:8 }}
-                  {% else %}
-                    —
-                  {% endif %}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
 
-    <!-- Кнопки навигации -->
-    <button class="slider-nav slider-nav-prev" data-target="diarySlider" aria-label="Предыдущий день">‹</button>
-    <button class="slider-nav slider-nav-next" data-target="diarySlider" aria-label="Следующий день">›</button>
-  </div>
-{% endif %}
+                    <!-- БЖУ и калории -->
+                    {% if entry.calories or entry.protein or entry.fat or entry.carbs %}
+                      <div class="mt-1 nutrition-values">
+                        {% if entry.calories %}
+                          <span class="badge bg-light text-dark me-1">Ккал: {{ entry.calories }}</span>
+                        {% endif %}
+                        {% if entry.protein %}
+                          <span class="badge bg-light text-dark me-1">Б: {{ entry.protein }}г</span>
+                        {% endif %}
+                        {% if entry.fat %}
+                          <span class="badge bg-light text-dark me-1">Ж: {{ entry.fat }}г</span>
+                        {% endif %}
+                        {% if entry.carbs %}
+                          <span class="badge bg-light text-dark me-1">У: {{ entry.carbs }}г</span>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    {% if entry.notes %}
+                      <p class="mb-0 mt-1"><small class="text-muted">«{{ entry.notes|truncatewords:10 }}»</small></p>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+        </div>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p class="text-muted">Нет дней в этом месяце.</p>
+  {% endfor %}
+</div>
 
 <div class="mt-4 text-end">
   <a href="{% url 'accounts:nutritionist_clients' %}" class="btn btn-secondary">Назад к списку клиентов</a>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Инициализация всех слайдеров
-  document.querySelectorAll('.nutrition-slider-container').forEach(container => {
-    const slider = container.querySelector('.nutrition-slider');
-    const slides = slider.querySelectorAll('.nutrition-slide');
-    const prevBtn = container.querySelector('.slider-nav-prev');
-    const nextBtn = container.querySelector('.slider-nav-next');
+// Фильтрация по месяцам
+document.getElementById('monthFilter').addEventListener('change', function() {
+  const [year, month] = this.value.split('-');
+  window.location.href = `?year=${year}&month=${month}`;
+});
 
-    if (!slider || slides.length === 0) return;
-
-    let currentIndex = 0;
-    const slideWidth = 360;
-    const maxIndex = Math.max(0, slides.length - 2);
-
-    function updateSlider() {
-      const translateX = -currentIndex * slideWidth;
-      slider.style.transform = `translateX(${translateX}px)`;
-      prevBtn.disabled = currentIndex === 0;
-      nextBtn.disabled = currentIndex === maxIndex;
-      prevBtn.classList.toggle('opacity-low', currentIndex === 0);
-      nextBtn.classList.toggle('opacity-low', currentIndex === maxIndex);
-    }
-
-    function updateActiveSlides() {
-      slides.forEach((slide, index) => {
-        slide.classList.remove('active');
-        if (index === currentIndex || index === currentIndex + 1) {
-          slide.classList.add('active');
-        }
-      });
-    }
-
-    function navigatePrev() {
-      if (currentIndex > 0) {
-        currentIndex--;
-        updateSlider();
-        updateActiveSlides();
+// Раскрытие карточек
+document.querySelectorAll('.day-header').forEach(header => {
+  header.addEventListener('click', function() {
+    const date = this.dataset.date;
+    const card = document.getElementById(`meal-${date}`);
+    if (card) {
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+      const icon = this.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('bi-chevron-down');
+        icon.classList.toggle('bi-chevron-up');
       }
     }
-
-    function navigateNext() {
-      if (currentIndex < maxIndex) {
-        currentIndex++;
-        updateSlider();
-        updateActiveSlides();
-      }
-    }
-
-    // Навигация
-    prevBtn?.addEventListener('click', navigatePrev);
-    nextBtn?.addEventListener('click', navigateNext);
-
-    // Колесико
-    let scrollTimeout;
-    container.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      clearTimeout(scrollTimeout);
-      const direction = e.deltaY > 0 ? 1 : -1;
-      if (direction > 0 && currentIndex < maxIndex) {
-        currentIndex++;
-      } else if (direction < 0 && currentIndex > 0) {
-        currentIndex--;
-      }
-      updateSlider();
-      updateActiveSlides();
-      scrollTimeout = setTimeout(() => {}, 150);
-    }, { passive: false });
-
-    // Drag & Touch (упрощённо)
-    let isDragging = false, startX = 0, startTranslate = 0;
-    container.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      startX = e.clientX;
-      startTranslate = -currentIndex * slideWidth;
-      slider.style.transition = 'none';
-    });
-    container.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const diff = e.clientX - startX;
-      slider.style.transform = `translateX(${startTranslate + diff}px)`;
-    });
-    ['mouseup', 'mouseleave'].forEach(e => {
-      container.addEventListener(e, () => {
-        if (!isDragging) return;
-        isDragging = false;
-        slider.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        currentIndex = Math.round((-parseFloat(slider.style.transform.replace(/[^-\d.]/g, '')) || 0) / slideWidth);
-        currentIndex = Math.max(0, Math.min(currentIndex, maxIndex));
-        updateSlider();
-        updateActiveSlides();
-      });
-    });
-
-    // Инициализация
-    updateSlider();
-    updateActiveSlides();
   });
 });
-</script>
 
+</script>
 {% endblock %}

@@ -240,10 +240,7 @@ def view_client_nutrition_plan(request, client_id):
     if request.user.role != 'nutritionist':
         return redirect('accounts:dashboard')
 
-    # Получаем профиль клиента
     client_profile = get_object_or_404(ClientProfile, id=client_id)
-
-    # Проверяем, что клиент привязан к этому нутрициологу
     program = NutritionProgram.objects.filter(
         client=client_profile,
         nutritionist__user=request.user
@@ -253,36 +250,66 @@ def view_client_nutrition_plan(request, client_id):
         messages.warning(request, "Этот клиент не привязан к вам.")
         return redirect('accounts:nutritionist_clients')
 
-    # === ПЛАН ПИТАНИЯ (из программы) ===
-    all_dates = DailyMealPlan.objects.filter(program=program).values_list('date', flat=True).order_by('date')
-    if not all_dates:
-        start_date = program.start_date or timezone.now().date()
-        dates = [start_date + timedelta(days=i) for i in range(7)]
-    else:
-        dates = list(all_dates)
+    # Проверка дат программы
+    if not program.start_date or not program.end_date:
+        messages.error(request, "Программа не имеет корректных дат.")
+        return redirect('accounts:nutritionist_clients')
 
-    plans = []
-    for date in dates:
-        plan, created = DailyMealPlan.objects.get_or_create(program=program, date=date)
-        plans.append(plan)
+    from datetime import timedelta
+    total_days = (program.end_date - program.start_date).days + 1
+    all_program_dates = [program.start_date + timedelta(days=i) for i in range(total_days)]
 
-    # === САМОСТОЯТЕЛЬНЫЕ ЗАПИСИ (из дневника) ===
-    diary_entries = FoodDiaryEntry.objects.filter(client=client_profile).order_by('date', 'time')
+    # Получаем все планы
+    existing_plans = {
+        plan.date: plan
+        for plan in DailyMealPlan.objects.filter(
+            program=program,
+            date__range=[program.start_date, program.end_date]
+        )
+    }
+
+    # Группируем по месяцам
+    from collections import defaultdict
+    months = defaultdict(list)
+    for date in all_program_dates:
+        key = (date.year, date.month)
+        months[key].append(date)
+
+    month_options = []
+    for (year, month), dates in sorted(months.items()):
+        from django.utils import formats
+        from django.utils.timezone import datetime
+        month_options.append({
+            'year': year,
+            'month': month,
+            'month_name': formats.date_format(datetime(year, month, 1), "F"),
+            'value': f"{year}-{month}",
+        })
+
+    selected_year = int(request.GET.get('year', program.start_date.year))
+    selected_month = int(request.GET.get('month', program.start_date.month))
+    current_month_key = (selected_year, selected_month)
+    current_month_dates = months.get(current_month_key, [])
+
+    diary_entries = FoodDiaryEntry.objects.filter(
+        client=client_profile,
+        date__range=[program.start_date, program.end_date]
+    ).order_by('date', 'time')
+
+    # Группируем по датам
+    from collections import defaultdict
     diary_by_date = defaultdict(list)
     for entry in diary_entries:
         diary_by_date[entry.date].append(entry)
 
-    extra_diary_days = []
-    for date in sorted(diary_by_date.keys()):
-        extra_diary_days.append({
-            'date': date,
-            'entries': diary_by_date[date]
-        })
-
-    return render(request, 'programs/view_client_nutrition_plan.html', {
+    context = {
         'program': program,
-        'plans': plans,
         'client': client_profile,
-        'dates': dates,
-        'extra_diary_days': extra_diary_days,
-    })
+        'month_options': month_options,
+        'selected_year': selected_year,
+        'selected_month': selected_month,
+        'current_month_dates': current_month_dates,
+        'diary_by_date': dict(diary_by_date),
+        'existing_plans': existing_plans,
+    }
+    return render(request, 'programs/view_client_nutrition_plan.html', context)
