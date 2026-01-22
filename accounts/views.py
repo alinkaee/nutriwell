@@ -23,48 +23,46 @@ from django.template.loader import render_to_string
 from django.db.models import F
 
 
+# accounts/views.py
+
 def register_view(request):
     invited_by_id = request.GET.get('invited_by')
 
     if request.method == 'POST':
         form = CustomUserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            user.role = 'client'
-            user.save()
+            user = form.save()  # ← роль уже из формы
 
-            # Создаём профиль клиента
-            client_profile, created = ClientProfile.objects.get_or_create(user=user)
+            # Создаём профиль в зависимости от роли
+            if user.role == 'client':
+                client_profile, created = ClientProfile.objects.get_or_create(user=user)
 
-            # Привязываем к нутрициологу, если invited_by_id был в GET
-            invited_by_id_post = request.POST.get('invited_by')
-            actual_invited_by_id = invited_by_id or invited_by_id_post
+                # Привязка к нутрициологу (если приглашение)
+                invited_by_id_post = request.POST.get('invited_by')
+                actual_invited_by_id = invited_by_id or invited_by_id_post
 
-            if actual_invited_by_id and actual_invited_by_id.isdigit():
-                try:
-                    nutritionist_user = User.objects.get(id=actual_invited_by_id, role='nutritionist')
-                    nutritionist_profile = NutritionistProfile.objects.get(user=nutritionist_user)
+                if actual_invited_by_id and actual_invited_by_id.isdigit():
+                    try:
+                        nutritionist_user = User.objects.get(id=actual_invited_by_id, role='nutritionist')
+                        nutritionist_profile = NutritionistProfile.objects.get(user=nutritionist_user)
+                        client_profile.nutritionist = nutritionist_profile
+                        client_profile.save()
 
-                    # Привязываем клиента
-                    client_profile.nutritionist = nutritionist_profile
-                    client_profile.save()
+                        NutritionProgram.objects.get_or_create(
+                            client=client_profile,
+                            nutritionist=nutritionist_profile,
+                            defaults={
+                                'name': f'Программа для {user.email}',
+                                'target_calories': 2000,
+                                'start_date': timezone.now().date(),
+                                'status': 'active'
+                            }
+                        )
+                    except Exception as e:
+                        print("Ошибка привязки:", e)
 
-                    # Создаём программу
-                    NutritionProgram.objects.get_or_create(
-                        client=client_profile,
-                        nutritionist=nutritionist_profile,
-                        defaults={
-                            'name': f'Программа для {user.email}',
-                            'target_calories': 2000,
-                            'target_protein': 100,
-                            'target_fat': 70,
-                            'target_carbs': 200,
-                            'start_date': timezone.now().date(),
-                            'status': 'active'
-                        }
-                    )
-                except Exception as e:
-                    print("Ошибка привязки:", e)
+            elif user.role == 'nutritionist':
+                NutritionistProfile.objects.get_or_create(user=user)
 
             login(request, user)
             return redirect('accounts:dashboard')
@@ -75,7 +73,6 @@ def register_view(request):
         'form': form,
         'invited_by': invited_by_id
     })
-
 
 @login_required
 def dashboard(request):
