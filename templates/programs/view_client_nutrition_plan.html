@@ -145,71 +145,49 @@
         </div>
       {% endif %}
 
-      <!-- ФАКТИЧЕСКОЕ ПИТАНИЕ ИЗ ДНЕВНИКА (всегда показываем, если есть) -->
-      {% if diary_by_date|get_item:date %}
+      <!-- ФАКТИЧЕСКОЕ ПИТАНИЕ -->
+      {% if diary_with_nutrition|get_item:date %}
         <div class="meal-card">
           <h6 class="text-muted mb-2">Фактическое питание:</h6>
-          {% for entry in diary_by_date|get_item:date %}
+          {% for item in diary_with_nutrition|get_item:date %}
             <div class="mb-2 pb-2 border-bottom">
               <small class="text-muted">
-                {% if entry.time %}
-                  {{ entry.time|time:"H:i" }}
+                {% if item.entry.time %}
+                  {{ item.entry.time|time:"H:i" }}
                 {% else %}
                   —
                 {% endif %}
               </small><br>
 
               <!-- Продукты -->
-            {% if diary_with_nutrition|get_item:date %}
-              {% for item in diary_with_nutrition|get_item:date %}
-                {% if item.products %}
-                  <ul class="mb-1" style="padding-left: 1.25rem; margin-top: 0.25rem;">
-                    {% for prod in item.products %}
-                      <li>
-                        {{ prod.product_name }} × {{ prod.quantity }} г
-                        {% with n=prod.nutrition %}
-                          {% if n.calories or n.protein or n.fat or n.carbs %}
-                            <br>
-                            <small class="text-muted">
-                              Ккал: {{ n.calories }},
-                              Б: {{ n.protein }}г,
-                              Ж: {{ n.fat }}г,
-                              У: {{ n.carbs }}г
-                            </small>
-                          {% endif %}
-                        {% endwith %}
-                      </li>
-                    {% endfor %}
-                  </ul>
-                {% elif item.entry.food_description %}
-                  {{ item.entry.food_description|truncatewords:8 }}
-                {% else %}
-                  —
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-
-              <!-- БЖУ -->
-              {% if entry.calories or entry.protein or entry.fat or entry.carbs %}
-                <div class="mt-1 nutrition-values">
-                  {% if entry.calories %}
-                    <span class="badge bg-light text-dark me-1">Ккал: {{ entry.calories }}</span>
-                  {% endif %}
-                  {% if entry.protein %}
-                    <span class="badge bg-light text-dark me-1">Б: {{ entry.protein }}г</span>
-                  {% endif %}
-                  {% if entry.fat %}
-                    <span class="badge bg-light text-dark me-1">Ж: {{ entry.fat }}г</span>
-                  {% endif %}
-                  {% if entry.carbs %}
-                    <span class="badge bg-light text-dark me-1">У: {{ entry.carbs }}г</span>
-                  {% endif %}
-                </div>
+              {% if item.products %}
+                <ul class="mb-1" style="padding-left: 1.25rem; margin-top: 0.25rem;">
+                  {% for prod in item.products %}
+                    <li>
+                      {{ prod.product_name }} × {{ prod.quantity }} г
+                      {% with n=prod.nutrition %}
+                        {% if n.calories or n.protein or n.fat or n.carbs %}
+                          <br>
+                          <small class="text-muted">
+                            Ккал: {{ n.calories }},
+                            Б: {{ n.protein }}г,
+                            Ж: {{ n.fat }}г,
+                            У: {{ n.carbs }}г
+                          </small>
+                        {% endif %}
+                      {% endwith %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% elif item.entry.food_description %}
+                {{ item.entry.food_description|truncatewords:8 }}
+              {% else %}
+                —
               {% endif %}
 
               <!-- Примечания -->
-              {% if entry.notes %}
-                <p class="mb-0 mt-1"><small class="text-muted">«{{ entry.notes|truncatewords:10 }}»</small></p>
+              {% if item.entry.notes %}
+                <p class="mb-0 mt-1"><small class="text-muted">«{{ item.entry.notes|truncatewords:10 }}»</small></p>
               {% endif %}
             </div>
           {% endfor %}

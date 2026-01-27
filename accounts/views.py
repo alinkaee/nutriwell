@@ -83,13 +83,48 @@ def dashboard(request):
     if user.role == 'client':
         profile, created = ClientProfile.objects.get_or_create(user=user)
         latest_progress = ProgressRecord.objects.filter(client=profile).order_by('-date').first()
-        latest_diary = FoodDiaryEntry.objects.filter(client=profile).order_by('-date')[:3]
+        latest_diary = FoodDiaryEntry.objects.filter(
+            client__user=request.user
+        ).order_by('-date', '-created_at')[:5]
         active_program = NutritionProgram.objects.filter(client=profile, status='active').first()
+        MEAL_CALORIE_LIMIT = 800
+
+        enriched_diary = []
+        for entry in latest_diary:
+            enriched_products = []
+            total_cal = total_prot = total_fat = total_carb = 0
+
+            for dp in entry.products.all():
+                nutrition = dp.product.get_nutrition_for_quantity(float(dp.quantity))
+                enriched_products.append({
+                    'product_name': dp.product.name,
+                    'quantity': dp.quantity,
+                    'nutrition': nutrition
+                })
+                total_cal += nutrition['calories']
+                total_prot += nutrition['protein']
+                total_fat += nutrition['fat']
+                total_carb += nutrition['carbs']
+
+            # Проверка превышения
+            is_over_limit = total_cal > MEAL_CALORIE_LIMIT
+
+            enriched_diary.append({
+                'entry': entry,
+                'products': enriched_products,
+                'total_nutrition': {
+                    'calories': total_cal,
+                    'protein': total_prot,
+                    'fat': total_fat,
+                    'carbs': total_carb,
+                },
+                'is_over_limit': is_over_limit,
+            })
 
         context.update({
             'profile': profile,
             'latest_progress': latest_progress,
-            'latest_diary': latest_diary,
+            'latest_diary_enriched': enriched_diary,
             'active_program': active_program,
         })
 
