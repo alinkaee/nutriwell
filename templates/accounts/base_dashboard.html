@@ -605,6 +605,12 @@
                 <i class="bi bi-pencil-square"></i> Редактировать профиль
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.resolver_match.url_name == 'chat_view' %}active{% endif %}"
+                 href="{% url 'chat:chat_view' active_nutritionist.user.id %}">
+                <i class="bi bi-chat-dots"></i> Чат с нутрициологом
+              </a>
+            </li>
           {% elif user.role == 'nutritionist' %}
             <li class="nav-item">
               <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">

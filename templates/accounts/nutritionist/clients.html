@@ -42,7 +42,6 @@
 </div>
 
 <!-- Список всех клиентов для ручной привязки -->
-<!-- Список всех клиентов для ручной привязки -->
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <span>Все зарегистрированные пользователи (для ручной привязки)</span>
@@ -58,12 +57,15 @@
             <strong>{{ client.user.get_full_name|default:client.user.email }}</strong>
             {% if client.goal %}<br><small>Цель: {{ client.goal|truncatewords:6 }}</small>{% endif %}
           </div>
-          {% if client.id in my_client_ids %}
-            <span class="badge bg-success">Уже ваш клиент</span>
-          {% else %}
-            <a href="{% url 'accounts:assign_client' client.id %}" class="btn btn-sm btn-primary">Привязать</a>
-          {% endif %}
-        </div>
+          <div class="d-flex gap-2">
+            {% if client.id in my_client_ids %}
+              <span class="badge bg-success">Ваш клиент</span>
+              <a href="{% url 'chat:chat_view' client.user.id %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-chat-dots"></i> Чат
+              </a>
+            {% else %}
+              <a href="{% url 'accounts:assign_client' client.id %}" class="btn btn-sm btn-primary">Привязать</a>
+            {% endif %}
       </div>
     {% empty %}
       <p class="text-muted">Нет зарегистрированных клиентов.</p>

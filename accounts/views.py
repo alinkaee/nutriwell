@@ -81,12 +81,23 @@ def dashboard(request):
     unread_notifications_count = request.user.notifications.filter(is_read=False).count()
 
     if user.role == 'client':
-        profile, created = ClientProfile.objects.get_or_create(user=user)
-        latest_progress = ProgressRecord.objects.filter(client=profile).order_by('-date').first()
+        try:
+            profile = user.client_profile
+            active_nutritionist = profile.nutritionist
+            # Проверяем, что у нутрициолога есть user
+            if active_nutritionist and not hasattr(active_nutritionist, 'user'):
+                active_nutritionist = None
+        except ClientProfile.DoesNotExist:
+            profile = None
+            active_nutritionist = None
+
+        latest_progress = ProgressRecord.objects.filter(client=profile).order_by('-date').first() if profile else None
         latest_diary = FoodDiaryEntry.objects.filter(
             client__user=request.user
         ).order_by('-date', '-created_at')[:5]
-        active_program = NutritionProgram.objects.filter(client=profile, status='active').first()
+
+        active_program = NutritionProgram.objects.filter(client=profile, status='active').first() if profile else None
+
         MEAL_CALORIE_LIMIT = 800
 
         enriched_diary = []
@@ -123,6 +134,7 @@ def dashboard(request):
 
         context.update({
             'profile': profile,
+            'active_nutritionist': active_nutritionist,
             'latest_progress': latest_progress,
             'latest_diary_enriched': enriched_diary,
             'active_program': active_program,

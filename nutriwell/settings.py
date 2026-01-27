@@ -112,6 +112,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+MONGODB_SETTINGS = {
+    'host': 'mongodb://localhost:27018/',
+    'db': 'nutriwell_chat',
+}
+
 
 LANGUAGE_CODE = 'ru-ru'
 

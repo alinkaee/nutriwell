@@ -62,3 +62,18 @@ def view_client_profile(request, client_id):
         return redirect('accounts:nutritionist_clients')
 
     return render(request, 'clients/view_client_profile.html', {'profile': profile})
+
+@login_required
+def view_profile(request, client_id):
+    if request.user.role != 'nutritionist':
+        return redirect('accounts:dashboard')
+
+    client = get_object_or_404(ClientProfile, id=client_id)
+    # Убедись, что клиент привязан к этому нутрициологу
+    if client.nutritionist.user != request.user:
+        messages.warning(request, "Этот клиент не привязан к вам.")
+        return redirect('accounts:nutritionist_clients')
+
+    return render(request, 'clients/view_profile.html', {
+        'client': client,
+    })

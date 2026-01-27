@@ -1,0 +1,108 @@
+<!-- templates/chat/chat.html -->
+{% extends 'accounts/base_dashboard.html' %}
+
+{% block title %}Чат — {{ recipient.get_full_name|default:recipient.email }}{% endblock %}
+
+{% block content %}
+<div class="chat-container" style="max-width: 800px; margin: 0 auto;">
+  <h2><i class="bi bi-chat-dots me-2"></i>Чат с {{ recipient.get_full_name|default:recipient.email }}</h2>
+
+<div id="messages" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 1rem; margin-bottom: 1rem; background: #f8f9fa;">
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="message mb-3 {% if msg.sender_id == user.id %}sent{% else %}received{% endif %}">
+        <small class="text-muted d-block">{{ msg.timestamp|date:"d.m.Y H:i" }}</small>
+        <div style="
+          background: {% if msg.sender_id == user.id %}#e3f2fd{% else %}#f1f3f5{% endif %};
+          padding: 0.75rem;
+          border-radius: 8px;
+          display: inline-block;
+          max-width: 80%;
+        ">
+          {{ msg.text|default:"—" }}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted text-center py-4">Нет сообщений.</p>
+  {% endif %}
+</div>
+
+  <form id="message-form">
+    {% csrf_token %}
+    <input type="hidden" id="recipient-id" value="{{ recipient.id }}">
+    <div class="input-group">
+      <input type="text" id="message-input" class="form-control" placeholder="Введите сообщение..." required>
+      <button type="submit" class="btn btn-primary">Отправить</button>
+    </div>
+  </form>
+</div>
+
+<script>
+let lastMessageId = null;
+
+// Функция загрузки сообщений
+async function loadMessages() {
+    const response = await fetch(`/chat/api/messages/${recipientId}/`);
+    if (!response.ok) return;
+
+    const data = await response.json();
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML = '';
+
+    data.messages.forEach(msg => {
+        const isSent = msg.sender_id == {{ user.id }};
+        const messageEl = document.createElement('div');
+        messageEl.className = `message mb-3 ${isSent ? 'sent' : 'received'}`;
+        messageEl.innerHTML = `
+            <small class="text-muted d-block">${msg.timestamp}</small>
+            <div style="
+                background: ${isSent ? '#e3f2fd' : '#f1f3f5'};
+                padding: 0.75rem;
+                border-radius: 8px;
+                display: inline-block;
+                max-width: 80%;
+            ">${msg.text}</div>
+        `;
+        messagesDiv.appendChild(messageEl);
+
+        // Запоминаем ID последнего сообщения
+        lastMessageId = msg.id;
+    });
+
+    // Прокрутка вниз
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Отправка сообщения
+document.getElementById('message-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = document.getElementById('message-input').value.trim();
+    if (!text) return;
+
+    const response = await fetch('{% url "chat:send_message" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            recipient_id: {{ recipient.id }},
+            text: text
+        })
+    });
+
+    if (response.ok) {
+        document.getElementById('message-input').value = '';
+        loadMessages(); // Обновляем сразу
+    }
+});
+
+// Автоматическое обновление каждые 2 секунды
+setInterval(loadMessages, 2000);
+
+// Загружаем при старте
+const recipientId = {{ recipient.id }};
+loadMessages();
+</script>
+{% endblock %}
