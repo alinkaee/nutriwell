@@ -606,10 +606,15 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if request.resolver_match.url_name == 'chat_view' %}active{% endif %}"
-                 href="{% url 'chat:chat_view' active_nutritionist.user.id %}">
-                <i class="bi bi-chat-dots"></i> Чат с нутрициологом
-              </a>
+              {% if active_nutritionist and active_nutritionist.user %}
+                <a class="nav-link" href="{% url 'chat:chat_view' active_nutritionist.user.id %}">
+                  <i class="bi bi-chat-dots"></i> Чат с нутрициологом
+                </a>
+              {% else %}
+                <span class="nav-link text-muted">
+                  <i class="bi bi-chat-dots"></i> Нет нутрициолога
+                </span>
+              {% endif %}
             </li>
           {% elif user.role == 'nutritionist' %}
             <li class="nav-item">

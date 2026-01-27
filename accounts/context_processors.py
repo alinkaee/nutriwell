@@ -1,5 +1,6 @@
 from notifications.models import Notification
 from programs.models import NutritionProgram
+from clients.models import ClientProfile
 
 def notifications(request):
     if request.user.is_authenticated:
@@ -20,3 +21,13 @@ def active_program(request):
             'active_program': program
         }
     return {}
+
+def chat_context(request):
+    context = {}
+    if request.user.is_authenticated and request.user.role == 'client':
+        try:
+            profile = request.user.client_profile
+            context['active_nutritionist'] = profile.nutritionist
+        except ClientProfile.DoesNotExist:
+            context['active_nutritionist'] = None
+    return context
