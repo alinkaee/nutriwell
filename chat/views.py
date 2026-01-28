@@ -30,6 +30,7 @@ def chat_view(request, recipient_id):
     context = {
         'recipient': recipient,
         'messages': messages,
+        'user_id_str': str(request.user.id),
     }
 
     print("Messages:", messages)

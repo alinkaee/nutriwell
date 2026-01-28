@@ -1,3 +1,8 @@
 Django==5.0.7
 Pillow>=10.0.0
 reportlab==4.2.5
+django-filter
+pymongo
+channels
+uvicorn[standard]
+aiofiles
